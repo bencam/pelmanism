@@ -15,7 +15,7 @@ from google.appengine.ext import ndb
 
 from models import User, Game, Guess1, Score
 from models import StringMessage, NewGameForm, GameForm, MakeMoveForm
-from models import ScoreForms
+from models import ScoreForms, GameFormUserGames, GameForms
 
 import game_logic
 
@@ -33,6 +33,9 @@ MAKE_MOVE_REQUEST = endpoints.ResourceContainer(
 USER_REQUEST = endpoints.ResourceContainer(
 	user_name=messages.StringField(1),
 	email=messages.StringField(2))
+CANCEL_GAME = endpoints.ResourceContainer(
+	user_name=messages.StringField(1),
+	urlsafe_game_key=messages.StringField(2))
 MEMCACHE_MOVES_REMAINING = 'MOVES_REMAINING'
 # ------------------------End gloabl variables-----------------------
 
@@ -49,7 +52,7 @@ class PelmanismApi(remote.Service):
 
 
 # ---------------------------Endpoints-------------------------------
-	# CREATE USER endpoint
+	# CREATE USER endpoint ---
 	@endpoints.method(
 		request_message=USER_REQUEST,
 		response_message=StringMessage,
@@ -67,7 +70,7 @@ class PelmanismApi(remote.Service):
 			request.user_name))
 
 
-	# NEW GAME endpoint
+	# NEW GAME endpoint ---
 	@endpoints.method(
 		request_message=NEW_GAME_REQUEST,
 		response_message=GameForm,
@@ -82,8 +85,8 @@ class PelmanismApi(remote.Service):
 				'A user with that name does not exist!')
 
 		# Set up game variables
-		deck = game_logic.deck_creation()  # Move this var and others
-		disp_deck = ['_' for x in range(len(deck))]  # below the if not
+		deck = game_logic.deck_creation()
+		disp_deck = ['_' for x in range(len(deck))]
 		guesses_made = 0
 		match_list = []
 		match_list_int = []
@@ -107,7 +110,7 @@ class PelmanismApi(remote.Service):
 		return game.to_form('Good luck playing Pelmanism!')
 
 
-	# GET GAME endpoint
+	# GET GAME endpoint ---
 	@endpoints.method(
 		request_message=GET_GAME_REQUEST,
 		response_message=GameForm,
@@ -120,12 +123,16 @@ class PelmanismApi(remote.Service):
 		# in the Datastore
 		game = get_by_urlsafe(request.urlsafe_game_key, Game)
 		if game:
+			if game.game_over:
+				return game.to_form('The game is already over!')
+			if game.cancelled:
+				return game.to_form('The game has been cancelled!')
 			return game.to_form('Time to make a move!')
 		else:
 			raise endpoints.NotFoundException('Game not found!')
 
 
-	# MAKE MOVE endpoint
+	# MAKE MOVE endpoint ---
 	@endpoints.method(
 		request_message=MAKE_MOVE_REQUEST,
 		response_message=GameForm,
@@ -155,9 +162,11 @@ class PelmanismApi(remote.Service):
 			# Reset the deck (make sure all cards are turned over)
 			game_logic.reset_deck(game.disp_deck, mli)
 
-			# Check to see if the game is over
+			# Check to see if the game is over or cancelled
 			if game.game_over:
 				return game.to_form('The game is already over!')
+			if game.cancelled:
+				return game.to_form('The game has been cancelled!')
 
 			# Handle a guess error
 			game_logic.guess_error(guess1_int, mli)
@@ -228,7 +237,7 @@ class PelmanismApi(remote.Service):
 					'Sorry, you didn\'t find a match.' + won_lost_msg)
 
 
-	# GET SCORES endpoint
+	# GET SCORES endpoint ---
 	@endpoints.method(
 		response_message=ScoreForms,
 		path='scores',
@@ -240,7 +249,7 @@ class PelmanismApi(remote.Service):
 			items=[score.to_form() for score in Score.query()])
 
 
-	# GET USER SCORES endpoint
+	# GET USER SCORES endpoint ---
 	@endpoints.method(
 		request_message=USER_REQUEST,
 		response_message=ScoreForms,
@@ -257,7 +266,7 @@ class PelmanismApi(remote.Service):
 		return ScoreForms(items=[score.to_form() for score in scores])
 
 
-	# GET AVERAGE ATTEMPTS endpoint
+	# GET AVERAGE ATTEMPTS endpoint ---
 	@endpoints.method(
 		response_message=StringMessage,
 		path='games/average_attempts',
@@ -281,19 +290,57 @@ class PelmanismApi(remote.Service):
 				'The average moves remaining is {:.2f}'.format(average))
 
 
-	# GET USER GAMES endpoint
-	# @endpoints.method(
-	# 	response_message=StringMessage,
-	# 	path='FILL IN',
-	# 	name='get_user_games',
-	# 	http_method='GET')
-	# def get_user_games(self):
-	# 	"""Add docstring"""
-		# Add stuff
-		
+	# GET USER GAMES endpoint ---
+	@endpoints.method(
+		request_message=USER_REQUEST,
+		response_message=GameForms,
+		path='game/user/{user_name}',
+		name='get_user_games',
+		http_method='GET')
+	def get_user_games(self, request):
+		"""Add docstring"""
+		user = User.query(User.name == request.user_name).get()
+		if not user:
+			raise endpoints.NotFoundException(
+				'A user with that name does not exist!')
+		# Get a list of all of a user's games
+		games = Game.query(Game.user == user.key).fetch()
+
+		# Filter out completed and cancelled games; return what's left
+		game_lst = []
+		for g in games:
+			if g.game_over == False:
+				if g.cancelled == False:
+					game_lst.append(g)
+		return GameForms(items=[g.to_form_user_games() for g in game_lst])
 
 
-	# CANCEL GAME endpoint
+	# CANCEL GAME endpoint ---
+	@endpoints.method(
+		request_message=CANCEL_GAME,
+		response_message=GameForm,
+		path='game/{urlsafe_game_key}/user/{user_name}',
+		name='cancel_game',
+		http_method='PUT')
+	def cancel_game(self, request):
+		"""Add docstring"""
+		user = User.query(User.name == request.user_name).get()
+		if not user:
+			raise endpoints.NotFoundException(
+				'A user with that name does not exist!')
+		game = get_by_urlsafe(request.urlsafe_game_key, Game)
+		if game.game_over == True:
+			raise endpoints.BadRequestException(
+					'Sorry, you can\'t delete a completed game.')
+		if user.key != game.user:
+			raise endpoints.BadRequestException(
+				'Sorry, you\'re not authorized to cancel this game.')
+		game.cancelled = True
+		game.put()
+		return game.to_form('Game cancelled')
+
+
+
 	# GET HIGH SCORES endpoint
 	# GET USER RANKINGS endpoint
 	# GET GAME HISTORY endpoint
@@ -302,3 +349,10 @@ class PelmanismApi(remote.Service):
 
 # Start the API server
 api = endpoints.api_server([PelmanismApi])
+
+
+# SOURCES
+
+# A post by forum mentor abhishek_ghosh helped me figure out a querying
+# problem I was having with the get user games endpoint; see https://
+# discussions.udacity.com/t/join-like-queries/180753

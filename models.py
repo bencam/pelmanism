@@ -31,6 +31,7 @@ class Game(ndb.Model):
 	match_list_int = ndb.IntegerProperty(repeated=True)
 	matches_found = ndb.IntegerProperty(required=True)
 	move1_or_move2 = ndb.IntegerProperty()
+	cancelled = ndb.BooleanProperty(required=True, default=False)
 	user = ndb.KeyProperty(required=True, kind='User')
 
 	@classmethod
@@ -55,7 +56,8 @@ class Game(ndb.Model):
 			match_list_int=match_list_int,
 			matches_found=matches_found,
 			move1_or_move2=move1_or_move2,
-			game_over=False)
+			game_over=False,
+			cancelled=False)
 		# Here we store (or create, then store) the stuff in the db
 		game.put()
 		return game
@@ -69,6 +71,7 @@ class Game(ndb.Model):
 		form.user_name = self.user.get().name
 		form.attempts_remaining = self.attempts_remaining
 		form.game_over = self.game_over
+		form.cancelled = self.cancelled
 		form.deck = self.deck  # TESTING
 		form.disp_deck = self.disp_deck
 		form.guesses_made = self.guesses_made
@@ -150,7 +153,8 @@ class GameForm(messages.Message):
 	guesses_made = messages.IntegerField(7, required=True)
 	match_list = messages.StringField(8, repeated=True)
 	matches_found = messages.IntegerField(9, required=True)
-	deck = messages.StringField(10, repeated=True)  # TESTING
+	cancelled = messages.BooleanField(10, required=True)
+	deck = messages.StringField(11, repeated=True)  # TESTING
 
 
 class GameFormUserGames(messages.Message):
