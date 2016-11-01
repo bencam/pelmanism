@@ -36,6 +36,8 @@ USER_REQUEST = endpoints.ResourceContainer(
 CANCEL_GAME = endpoints.ResourceContainer(
 	user_name=messages.StringField(1),
 	urlsafe_game_key=messages.StringField(2))
+HIGH_SCORES = endpoints.ResourceContainer(
+	number_of_results=messages.IntegerField(1))
 MEMCACHE_MOVES_REMAINING = 'MOVES_REMAINING'
 # ------------------------End gloabl variables-----------------------
 
@@ -100,7 +102,7 @@ class PelmanismApi(remote.Service):
 				match_list_int, matches_found, move1_or_move2)
 		except ValueError:
 			raise endpoints.BadRequestException(
-				'Number of attempts can be no more than 75!')
+				'Number of attempts can be no more than 60!')
 
 		# Update the number of attempts remaining with a task queue
 		taskqueue.add(url='/tasks/cache_average_attempts')
@@ -340,8 +342,27 @@ class PelmanismApi(remote.Service):
 		return game.to_form('Game cancelled')
 
 
+	# GET HIGH SCORES endpoint ---
+	@endpoints.method(
+		request_message=HIGH_SCORES,
+		response_message=ScoreForms,
+		path='high_scores',
+		name='get_high_scores',
+		http_method='GET')
+	def get_high_scores(self, request):
+		"""Add docstring"""
+		num = request.number_of_results
+		if num:
+			scores = Score.query().order(-Score.total_points).fetch(num)
+		else:
+			scores = Score.query().order(-Score.total_points).fetch()
+		return ScoreForms(
+			items=[score.to_form() for score in scores])
 
-	# GET HIGH SCORES endpoint
+
+
+
+
 	# GET USER RANKINGS endpoint
 	# GET GAME HISTORY endpoint
 # ---------------------------End endpoints---------------------------

@@ -41,7 +41,7 @@ class Game(ndb.Model):
 		"""ADD in docstring"""
 		# This function is for creating a new game
 		# Check to make sure the number of attempts is less than 76
-		if attempts > 75:
+		if attempts > 60:
 			raise ValueError(
 				'Number of attempts can be no more than 75!')
 		# ADD IN: must be > 20 in bit above
@@ -108,7 +108,8 @@ class Game(ndb.Model):
 			won=won,
 			guesses_made=self.guesses_made,
 			game_deck=self.deck,
-			matches_found=self.matches_found)
+			matches_found=self.matches_found,
+			total_points=(500 - ((self.guesses_made - self.matches_found) * 10)))
 		score.put()
 
 
@@ -126,6 +127,7 @@ class Score(ndb.Model):
 	guesses_made = ndb.IntegerProperty(required=True)
 	game_deck = ndb.StringProperty(repeated=True)
 	matches_found = ndb.IntegerProperty(required=True)
+	total_points = ndb.IntegerProperty(required=True)
 
 	def to_form(self):
 		# This returns a ScoreForm representation of Score
@@ -135,7 +137,8 @@ class Score(ndb.Model):
 			date=str(self.date),
 			guesses_made=self.guesses_made,
 			game_deck=self.game_deck,
-			matches_found=self.matches_found)
+			matches_found=self.matches_found,
+			total_points=self.total_points)
 # -------------------------End game objects--------------------------
 
 
@@ -198,6 +201,7 @@ class ScoreForm(messages.Message):
 	guesses_made = messages.IntegerField(4, required=True)
 	game_deck = messages.StringField(5, repeated=True)
 	matches_found = messages.IntegerField(6, required=True, default=0)
+	total_points = messages.IntegerField(7)  # required=True
 
 
 class ScoreForms(messages.Message):
