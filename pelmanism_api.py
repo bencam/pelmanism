@@ -15,7 +15,7 @@ from google.appengine.ext import ndb
 
 from models import User, Game, Guess1, Score
 from models import StringMessage, NewGameForm, GameForm, MakeMoveForm
-from models import ScoreForms, GameFormUserGames, GameForms
+from models import ScoreForms, GameFormUserGames, GameForms, UserRankings
 
 import game_logic
 
@@ -66,8 +66,13 @@ class PelmanismApi(remote.Service):
 		if User.query(User.name == request.user_name).get():
 			raise endpoints.ConflictException(
 				'A user with that name already exists.')
-		user = User(name=request.user_name, email=request.email)
+		user = User(name=request.user_name, email=request.email,
+			games_played=0, total_guesses=0, total_points=0,
+			points_per_guess=0)
 		user.put()
+		print ''
+		print 'This is the user: %s' % user
+		print ''
 		return StringMessage(message='User {} created!'.format(
 			request.user_name))
 
@@ -145,6 +150,7 @@ class PelmanismApi(remote.Service):
 		"""Add in docstring"""
 		# Set up variables for making the first and second moves
 		game = get_by_urlsafe(request.urlsafe_game_key, Game)
+		user = User.query(game.user == User.key).get()
 		deck = game.deck
 		mli = game.match_list_int
 		match_list = game.match_list
@@ -174,7 +180,7 @@ class PelmanismApi(remote.Service):
 			game_logic.guess_error(guess1_int, mli)
 
 			# Convert guess_int into a string variable containing
-			# the actual card value (i.e. a letter, rather than a number)
+			# the actual card value (i.e. a letter, rather than a num)
 			guess1 = deck[guess1_int]
 
 			# Display the deck with the chosen card flipped over
@@ -204,16 +210,17 @@ class PelmanismApi(remote.Service):
 			game.attempts_remaining -= 1
 			game.guesses_made += 1
 			game.move1_or_move2 += 1
+			user.total_guesses += 1
 			
 			# Convert guess2_int into a string variable containing
-			# the actual card value (i.e. a letter, rather than a number)
+			# the actual card value (i.e. a letter, rather than a num)
 			guess2 = deck[guess2_int]
 			msg = 'You turned over a %s. ' % guess2
 
 			# Display the deck with the chosen card flipped over
 			game.disp_deck[guess2_int] = guess2
 
-			# Throw an error if the same card was picked twice
+			# Return an error if the same card was picked twice
 			if guess1.guess1_int == guess2_int:
 				raise endpoints.BadRequestException(
 					msg + 'You can\'t pick the same card twice!')
@@ -226,15 +233,23 @@ class PelmanismApi(remote.Service):
 				mli.append(guess2_int)
 				game.matches_found += 1
 				# Determine if the game is over
-				won_lost_msg = game_logic.won_or_lost(game)
+				won_lost_msg = game_logic.won_or_lost(game, user)
+				# If the game is over, add up the points scored
+				game_logic.points(
+					game, game.guesses_made, game.matches_found, user)
 				game.put()
+				user.put()
 				return game.to_form(msg +
 					'You found a match!' + won_lost_msg)
 
 			else:
 				# Determine if the game is over
-				won_lost_msg = game_logic.won_or_lost(game)
+				won_lost_msg = game_logic.won_or_lost(game, user)
+				# If the game is over, add up the points scored
+				game_logic.points(
+					game, game.guesses_made, game.matches_found, user)
 				game.put()
+				user.put()
 				return game.to_form(msg +
 					'Sorry, you didn\'t find a match.' + won_lost_msg)
 
@@ -314,7 +329,8 @@ class PelmanismApi(remote.Service):
 			if g.game_over == False:
 				if g.cancelled == False:
 					game_lst.append(g)
-		return GameForms(items=[g.to_form_user_games() for g in game_lst])
+		return GameForms(
+			items=[g.to_form_user_games() for g in game_lst])
 
 
 	# CANCEL GAME endpoint ---
@@ -353,18 +369,40 @@ class PelmanismApi(remote.Service):
 		"""Add docstring"""
 		num = request.number_of_results
 		if num:
-			scores = Score.query().order(-Score.total_points).fetch(num)
+			scores = Score.query().order(-Score.points).fetch(num)
 		else:
-			scores = Score.query().order(-Score.total_points).fetch()
+			scores = Score.query().order(-Score.points).fetch()
 		return ScoreForms(
 			items=[score.to_form() for score in scores])
 
 
+	# GET USER RANKINGS endpoint ---
+	@endpoints.method(
+		response_message=UserRankings,
+		path='user_rankings',
+		name='get_user_rankings',
+		http_method='GET')
+	def get_user_rankings(self, request):
+		"""Add docstring"""
+		u_rankings = User.query().order(
+			-User.points_per_guess, -User.total_points).fetch()
+		return UserRankings(
+			items=[user.to_rankings_form() for user in u_rankings])
 
 
 
-	# GET USER RANKINGS endpoint
-	# GET GAME HISTORY endpoint
+
+
+
+	# GET GAME HISTORY endpoint ---
+	# @endpoints.method(
+	# 	response_message=SOMETHING,
+	# 	path='game_history',
+	# 	name='get_game_history'
+	# 	http_method='GET')
+	# def get_game_history(self, request):
+	# 	"""Add docstring"""
+	# 	Add in function
 # ---------------------------End endpoints---------------------------
 
 
@@ -377,3 +415,8 @@ api = endpoints.api_server([PelmanismApi])
 # A post by forum mentor abhishek_ghosh helped me figure out a querying
 # problem I was having with the get user games endpoint; see https://
 # discussions.udacity.com/t/join-like-queries/180753
+
+# Udacity student matthew_240343 gave me some hints on how to complete
+# the get_user_rankings endpoint in a forum question he asked; see
+# https://discussions.udacity.com/t/get-user-rankings-method-not-
+# working/172489/3

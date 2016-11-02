@@ -16,6 +16,19 @@ class User(ndb.Model):
 	"""User profile"""
 	name = ndb.StringProperty(required=True)
 	email = ndb.StringProperty()
+	games_played = ndb.IntegerProperty(required=True)
+	total_guesses = ndb.IntegerProperty(required=True)
+	total_points = ndb.IntegerProperty(required=True)
+	points_per_guess = ndb.IntegerProperty(required=True)
+
+	def to_rankings_form(self):
+		"""Add docstring"""
+		return UserRanking(
+			user_name=self.name,
+			games_played=self.games_played,
+			total_guesses=self.total_guesses,
+			total_points=self.total_points,
+			points_per_guess=self.points_per_guess)
 
 
 class Game(ndb.Model):
@@ -35,16 +48,15 @@ class Game(ndb.Model):
 	user = ndb.KeyProperty(required=True, kind='User')
 
 	@classmethod
-	def new_game(
-		cls, user, attempts, deck, disp_deck, guesses_made,
+	def new_game(cls, user, attempts, deck, disp_deck, guesses_made,
 		match_list, match_list_int, matches_found, move1_or_move2):
 		"""ADD in docstring"""
 		# This function is for creating a new game
-		# Check to make sure the number of attempts is less than 76
+		# Check to make sure the number of attempts is less than 61
 		if attempts > 60:
 			raise ValueError(
 				'Number of attempts can be no more than 75!')
-		# ADD IN: must be > 20 in bit above
+		# After testing, ADD IN: must be > 20 in bit above
 		game = Game(
 			user=user,
 			deck=deck,
@@ -72,7 +84,7 @@ class Game(ndb.Model):
 		form.attempts_remaining = self.attempts_remaining
 		form.game_over = self.game_over
 		form.cancelled = self.cancelled
-		form.deck = self.deck  # TESTING
+		form.deck = self.deck  # TESTING TESTING TESTING TESTING
 		form.disp_deck = self.disp_deck
 		form.guesses_made = self.guesses_made
 		form.match_list = self.match_list
@@ -99,9 +111,13 @@ class Game(ndb.Model):
 		if won is False, the player lost)"""
 		self.game_over = True
 		self.put()
+
 		# Add the game to the score board
 		# I think this is where we actually instantiate a Score object
-		# In other words, a score is only returned when a game ends
+		# (a score is only returned when a game ends)
+		points = self.points=(
+			500 - ((self.guesses_made - self.matches_found) * 10))
+		# guesses_made = self.guesses_made
 		score = Score(
 			user=self.user,
 			date=date.today(),
@@ -109,7 +125,7 @@ class Game(ndb.Model):
 			guesses_made=self.guesses_made,
 			game_deck=self.deck,
 			matches_found=self.matches_found,
-			total_points=(500 - ((self.guesses_made - self.matches_found) * 10)))
+			points=points)
 		score.put()
 
 
@@ -127,9 +143,10 @@ class Score(ndb.Model):
 	guesses_made = ndb.IntegerProperty(required=True)
 	game_deck = ndb.StringProperty(repeated=True)
 	matches_found = ndb.IntegerProperty(required=True)
-	total_points = ndb.IntegerProperty(required=True)
+	points = ndb.IntegerProperty(required=True)
 
 	def to_form(self):
+		"""Add docstring"""
 		# This returns a ScoreForm representation of Score
 		return ScoreForm(
 			user_name=self.user.get().name,
@@ -138,7 +155,7 @@ class Score(ndb.Model):
 			guesses_made=self.guesses_made,
 			game_deck=self.game_deck,
 			matches_found=self.matches_found,
-			total_points=self.total_points)
+			points=self.points)
 # -------------------------End game objects--------------------------
 
 
@@ -201,7 +218,7 @@ class ScoreForm(messages.Message):
 	guesses_made = messages.IntegerField(4, required=True)
 	game_deck = messages.StringField(5, repeated=True)
 	matches_found = messages.IntegerField(6, required=True, default=0)
-	total_points = messages.IntegerField(7)  # required=True
+	points = messages.IntegerField(7)  # required=True
 
 
 class ScoreForms(messages.Message):
@@ -209,6 +226,21 @@ class ScoreForms(messages.Message):
 	# We send this form to the person making the request
 	# It gives a list of all of the score objects
 	items = messages.MessageField(ScoreForm, 1, repeated=True)
+
+
+class UserRanking(messages.Message):
+	"""Add docstring"""
+	# Players are ranked by points_per_guess
+	user_name = messages.StringField(1, required=True)
+	games_played = messages.IntegerField(2, required=True)
+	total_guesses = messages.IntegerField(3, required=True)
+	total_points = messages.IntegerField(4, required=True)
+	points_per_guess = messages.IntegerField(5, required=True)
+
+
+class UserRankings(messages.Message):
+	"""Add docstring"""
+	items = messages.MessageField(UserRanking, 1, repeated=True)
 
 
 class StringMessage(messages.Message):

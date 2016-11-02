@@ -70,17 +70,32 @@ def reset_deck(disp_deck, mli):
 			disp_deck[x] = '_'
 
 
-def won_or_lost(game):
+def won_or_lost(game, user):
 	"""Add docstring"""
-	if game.matches_found == 3:
+	if game.matches_found == 1:
 		game.end_game(True)
+		user.games_played += 1
 		won_lost_msg = ' You win!'
 	elif game.attempts_remaining < 1:
 		game.end_game(False)
+		user.games_played += 1
 		won_lost_msg = ' Game over. You\'ve run out of guesses.'
 	else:
 		won_lost_msg = ''
 	return won_lost_msg
+
+
+def points(game, guesses_made, matches_found, user):
+	"""Add docstring"""
+	if game.matches_found == 1:
+		points=(500 - ((guesses_made - matches_found) * 10))
+		total_guesses = user.total_guesses + guesses_made
+		total_points = user.total_points + points
+		user.total_points = total_points
+		user.points_per_guess = total_points / total_guesses
+	print ''
+	print 'This is the user: %s' % user
+	print ''
 
 
 # SOURCES
