@@ -87,15 +87,16 @@ def won_or_lost(game, user):
 
 def points(game, guesses_made, matches_found, user):
 	"""Add docstring"""
-	if game.matches_found == 1:
+	if game.matches_found == 1 or game.attempts_remaining < 1:
 		points=(500 - ((guesses_made - matches_found) * 10))
-		total_guesses = user.total_guesses + guesses_made
+		total_guesses = user.total_guesses
 		total_points = user.total_points + points
 		user.total_points = total_points
 		user.points_per_guess = total_points / total_guesses
-	print ''
-	print 'This is the user: %s' % user
-	print ''
+		print ''
+		print 'This is the total_guesses: %s' % total_guesses
+		print 'This is the total_points: %s' % total_points
+		print ''
 
 
 # SOURCES

@@ -232,26 +232,22 @@ class PelmanismApi(remote.Service):
 				mli.append(guess1.guess1_int)
 				mli.append(guess2_int)
 				game.matches_found += 1
-				# Determine if the game is over
-				won_lost_msg = game_logic.won_or_lost(game, user)
-				# If the game is over, add up the points scored
-				game_logic.points(
-					game, game.guesses_made, game.matches_found, user)
-				game.put()
-				user.put()
-				return game.to_form(msg +
-					'You found a match!' + won_lost_msg)
+				match_msg = 'You found a match!'
 
 			else:
-				# Determine if the game is over
-				won_lost_msg = game_logic.won_or_lost(game, user)
-				# If the game is over, add up the points scored
-				game_logic.points(
-					game, game.guesses_made, game.matches_found, user)
-				game.put()
-				user.put()
-				return game.to_form(msg +
-					'Sorry, you didn\'t find a match.' + won_lost_msg)
+				match_msg = 'Sorry, you didn\'t find a match.'
+
+			# Determine if the game is over
+			won_lost_msg = game_logic.won_or_lost(game, user)
+			# If the game is over, add up the points scored
+			game_logic.points(
+				game, game.guesses_made, game.matches_found, user)
+			game.put()
+			user.put()
+			print ''
+			print 'This is the user: %s' % user
+			print ''
+			return game.to_form(msg + match_msg + won_lost_msg)
 
 
 	# GET SCORES endpoint ---

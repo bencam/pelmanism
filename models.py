@@ -117,7 +117,6 @@ class Game(ndb.Model):
 		# (a score is only returned when a game ends)
 		points = self.points=(
 			500 - ((self.guesses_made - self.matches_found) * 10))
-		# guesses_made = self.guesses_made
 		score = Score(
 			user=self.user,
 			date=date.today(),
@@ -127,6 +126,9 @@ class Game(ndb.Model):
 			matches_found=self.matches_found,
 			points=points)
 		score.put()
+		print ''
+		print 'This is the score: %s' % score
+		print ''
 
 
 class Guess1(ndb.Model):
