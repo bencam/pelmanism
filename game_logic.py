@@ -111,11 +111,12 @@ def points(game, guesses_made, matches_found, user):
 # SOURCES
 
 # SO user Peteris Caune helped me learn how to take a random
-# object from a list; see http://stackoverflow.com/questions/
+# object from a list in python; see http://stackoverflow.com/questions/
 # 18265935/python-create-list-with-numbers-between-2-values
 
-# My source for the deck_check list; SO: http://stackoverflow.com/
-# questions/18265935/python-create-list-with-numbers-between-2-values
+# An SO post helped me create the deck_check list; see: http://
+# stackoverflow.com/questions/18265935/python-create-list-with-
+# numbers-between-2-values
 
 # A SO discussion helped me figure out how to display chosen cards;
 # see http://stackoverflow.com/questions/2582138/finding-and-
