@@ -45,11 +45,13 @@ class Game(ndb.Model):
 	matches_found = ndb.IntegerProperty(required=True)
 	move1_or_move2 = ndb.IntegerProperty()
 	cancelled = ndb.BooleanProperty(required=True, default=False)
+	guess_history = ndb.StringProperty(repeated=True)
 	user = ndb.KeyProperty(required=True, kind='User')
 
 	@classmethod
 	def new_game(cls, user, attempts, deck, disp_deck, guesses_made,
-		match_list, match_list_int, matches_found, move1_or_move2):
+		match_list, match_list_int, matches_found, move1_or_move2,
+		guess_history):
 		"""ADD in docstring"""
 		# This function is for creating a new game
 		# Check to make sure the number of attempts is less than 61
@@ -69,11 +71,11 @@ class Game(ndb.Model):
 			matches_found=matches_found,
 			move1_or_move2=move1_or_move2,
 			game_over=False,
-			cancelled=False)
+			cancelled=False,
+			guess_history=guess_history)
 		# Here we store (or create, then store) the stuff in the db
 		game.put()
 		return game
-
 
 	def to_form(self, message):
 		"""ADD in docstring"""
@@ -92,8 +94,8 @@ class Game(ndb.Model):
 		form.message = message
 		return form
 
-
 	def to_form_user_games(self):
+		"""Add docstring"""
 		return GameFormUserGames(
 			urlsafe_key=self.key.urlsafe(),
 			user_name=self.user.get().name,
@@ -104,6 +106,16 @@ class Game(ndb.Model):
 			match_list=self.match_list,
 			matches_found=self.matches_found)
 
+	def to_form_game_history(self, message):
+		"""Add docstring"""
+		return GameHistory(
+			user_name=self.user.get().name,
+			guess_history=self.guess_history,
+			guesses_made=self.guesses_made,
+			match_list=self.match_list,
+			matches_found=self.matches_found,
+			deck=self.deck,
+			message=message)
 
 	def end_game(self, won=False):
 		"""End the game;
@@ -220,7 +232,8 @@ class ScoreForm(messages.Message):
 	guesses_made = messages.IntegerField(4, required=True)
 	game_deck = messages.StringField(5, repeated=True)
 	matches_found = messages.IntegerField(6, required=True, default=0)
-	points = messages.IntegerField(7)  # required=True
+	points = messages.IntegerField(7)  # required=True ADD AFTER ... 
+	# CLEARING THE DATABASE
 
 
 class ScoreForms(messages.Message):
@@ -243,6 +256,17 @@ class UserRanking(messages.Message):
 class UserRankings(messages.Message):
 	"""Add docstring"""
 	items = messages.MessageField(UserRanking, 1, repeated=True)
+
+
+class GameHistory(messages.Message):
+	"""Add docstring"""
+	user_name = messages.StringField(1, required=True)
+	guess_history = messages.StringField(2, repeated=True)
+	guesses_made = messages.IntegerField(3, required=True)
+	match_list = messages.StringField(4, repeated=True)
+	matches_found = messages.IntegerField(5, required=True)
+	deck = messages.StringField(6, repeated=True)
+	message = messages.StringField(7)
 
 
 class StringMessage(messages.Message):

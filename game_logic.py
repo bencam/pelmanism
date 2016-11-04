@@ -70,18 +70,27 @@ def reset_deck(disp_deck, mli):
 			disp_deck[x] = '_'
 
 
-def won_or_lost(game, user):
+def won_or_lost(game, user, guess1, guess2):
 	"""Add docstring"""
+	# Add guess1 and guess2 to the guess_history
+	history_msg = 'Guess: ' + guess1 + ', ' + guess2
+	game.guess_history.append(history_msg)
+
 	if game.matches_found == 1:
 		game.end_game(True)
 		user.games_played += 1
 		won_lost_msg = ' You win!'
+		history_end_msg = 'User %s won the game! Game over.' % user.name
+		game.guess_history.append(history_end_msg)
 	elif game.attempts_remaining < 1:
 		game.end_game(False)
 		user.games_played += 1
 		won_lost_msg = ' Game over. You\'ve run out of guesses.'
+		history_end_msg = 'User %s lost the game. Game over.' % user.name
+		game.guess_history.append(history_end_msg)
 	else:
 		won_lost_msg = ''
+
 	return won_lost_msg
 
 

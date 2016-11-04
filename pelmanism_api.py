@@ -15,7 +15,7 @@ from google.appengine.ext import ndb
 
 from models import User, Game, Guess1, Score
 from models import StringMessage, NewGameForm, GameForm, MakeMoveForm
-from models import ScoreForms, GameFormUserGames, GameForms, UserRankings
+from models import ScoreForms, GameForms, UserRankings, GameHistory
 
 import game_logic
 
@@ -99,12 +99,14 @@ class PelmanismApi(remote.Service):
 		match_list_int = []
 		matches_found = 0
 		move1_or_move2 = 0
+		guess_history = []
 
 		# Attempt to create a new game object
 		try:
 			game = Game.new_game(user.key, request.attempts,
 				deck, disp_deck, guesses_made, match_list,
-				match_list_int, matches_found, move1_or_move2)
+				match_list_int, matches_found, move1_or_move2,
+				guess_history)
 		except ValueError:
 			raise endpoints.BadRequestException(
 				'Number of attempts can be no more than 60!')
@@ -228,7 +230,7 @@ class PelmanismApi(remote.Service):
 			# Determine if a match was found and if the game is over
 			if guess1.guess1 == guess2:
 				match_list.extend(guess1.guess1)
-				match_list.extend(guess2)
+				match_list.extend(guess2)  # Make these one line
 				mli.append(guess1.guess1_int)
 				mli.append(guess2_int)
 				game.matches_found += 1
@@ -238,14 +240,17 @@ class PelmanismApi(remote.Service):
 				match_msg = 'Sorry, you didn\'t find a match.'
 
 			# Determine if the game is over
-			won_lost_msg = game_logic.won_or_lost(game, user)
+			won_lost_msg = game_logic.won_or_lost(game, user,
+				guess1.guess1, guess2)
 			# If the game is over, add up the points scored
 			game_logic.points(
 				game, game.guesses_made, game.matches_found, user)
+
 			game.put()
 			user.put()
 			print ''
 			print 'This is the user: %s' % user
+			print 'This is the guess_history: %s' % game.guess_history
 			print ''
 			return game.to_form(msg + match_msg + won_lost_msg)
 
@@ -386,19 +391,31 @@ class PelmanismApi(remote.Service):
 			items=[user.to_rankings_form() for user in u_rankings])
 
 
-
-
-
-
 	# GET GAME HISTORY endpoint ---
-	# @endpoints.method(
-	# 	response_message=SOMETHING,
-	# 	path='game_history',
-	# 	name='get_game_history'
-	# 	http_method='GET')
-	# def get_game_history(self, request):
-	# 	"""Add docstring"""
-	# 	Add in function
+	@endpoints.method(
+		request_message=GET_GAME_REQUEST,
+		response_message=GameHistory,
+		path='game_history',
+		name='get_game_history',
+		http_method='GET')
+	def get_game_history(self, request):
+		"""Add docstring"""
+		# Check to see if the urlsafe_game_key matches a game
+		# in the Datastore
+		game = get_by_urlsafe(request.urlsafe_game_key, Game)
+		if game:
+			if game.game_over:
+				return game.to_form_game_history(
+					'Thanks for playing, Pelmanism.')
+			elif game.cancelled:
+				return game.to_form_game_history(
+					'The game has been cancelled!')
+			else:
+				return game.to_form_game_history(
+					'The game is not over yet!')
+		else:
+			raise endpoints.NotFoundException('Game not found!')
+
 # ---------------------------End endpoints---------------------------
 
 
