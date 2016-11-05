@@ -415,7 +415,6 @@ class PelmanismApi(remote.Service):
 					'The game is not over yet!')
 		else:
 			raise endpoints.NotFoundException('Game not found!')
-
 # ---------------------------End endpoints---------------------------
 
 
@@ -424,6 +423,11 @@ api = endpoints.api_server([PelmanismApi])
 
 
 # SOURCES
+
+# Pelmanism is based off of a game (called 'Guess a Number') developed
+# by Udacity for Google App Engine. While this project is both different
+# from and more complicated than Guess a Number, the Guess a Number
+# scripts were used as a baseline for Pelmanism.
 
 # A post by forum mentor abhishek_ghosh helped me figure out a querying
 # problem I was having with the get user games endpoint; see https://
