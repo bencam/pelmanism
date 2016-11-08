@@ -1,6 +1,20 @@
 #!/usr/bin/python
 
-"""Add docstring"""
+
+"""
+The main.py file contains two handlers: SendReminderEmail
+and UpdateAverageMovesRemaining.
+
+SendReminderEmail sends a reminder email every 24 hours to all
+registered users who have at least one active game. The handler
+is called by a cron job (see cron.yaml).
+
+UpdateAverageMovesRemaining simply updates the average moves
+remaining for all active games. The handler is called by a
+taskqueue (see the get_average_attempts_remaining endpoint in
+pelmanism_api.py).
+
+"""
 
 
 import logging
@@ -10,10 +24,11 @@ from pelmanism_api import PelmanismApi
 from models import User, Game
 
 
-# Cron job for sending out a reminder email
 class SendReminderEmail(webapp2.RequestHandler):
 	def get(self):
-		"""Add docstring"""
+		"""Send a reminder email to all users with at
+		least one active game; call the handler every
+		24 hours using a cron job"""
 		app_id = app_identity.get_application_id()
 		users = User.query(User.email != None)
 		msg = ('\n\nIt looks like you started a Pelmanism game, '
@@ -34,10 +49,9 @@ class SendReminderEmail(webapp2.RequestHandler):
 						break
 
 
-# Task queue for updating average moves remaining
 class UpdateAverageMovesRemaining(webapp2.RequestHandler):
 	def post(self):
-		"""Add docstring"""
+		"""Update average moves remaining"""
 		PelmanismApi._cache_average_attempts()
 		self.response.set_status(204)
 
