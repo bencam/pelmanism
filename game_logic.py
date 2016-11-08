@@ -1,6 +1,22 @@
 #!/usr/bin/env python
 
-"""Add docstring. Clean up sources at the bottom"""
+
+"""
+The game_logic.py file contains five functions needed to play Pelmanism:
+
+1. deck_creation() creates a list of 20 cards selected at random
+2. guess_error() checks to make sure a chosen card is (a) in the deck
+	and (b) is not already part of a matched pair
+3. reset_deck() seset the deck so that cards flipped over in the most
+	recent turn are flipped back over when the next turn starts;
+	cards that have been matched are left as an 'X'
+4. won_or_lost() determines if the game is over and if the player won
+	or lost; returns a variable (won_lost_msg) that is used in
+	pelmanism_api.py to notify the user that the game is over
+5. points() determines (if the game is over) how many points and
+	points_per_guess the player earned
+
+"""
 
 
 import random
@@ -32,9 +48,9 @@ def deck_creation():
 		'J',
 		'J']
 
-	# Set variable for a card list to modify
+	# Set a variable for a card list to modify
 	selection_deck = cards
-	# Variable for the deck used in the game
+	# Set a variable for the deck used in the game
 	game_deck = []
 	game_deck_counter = 0
 
@@ -48,7 +64,7 @@ def deck_creation():
 
 
 def guess_error(guess_int, mli):
-	"""Check to make sure the card is in the deck and is not
+	"""Check to make sure the chosen card is in the deck and is not
 	already part of a matched pair"""
 	deck_check = range(20)
 	if guess_int not in deck_check:
@@ -61,8 +77,8 @@ def guess_error(guess_int, mli):
 
 def reset_deck(disp_deck, mli):
 	"""Reset the deck so that cards flipped over in the most
-	recent turn are flipped back over when the next turn starts.
-	Note: cards that have been matched are left as an X"""
+	recent turn are flipped back over when the next turn starts;
+	cards that have been matched are left as an 'X'"""
 	for x in range(len(disp_deck)):
 		if x in mli:
 			disp_deck[x] = 'X'
@@ -71,7 +87,8 @@ def reset_deck(disp_deck, mli):
 
 
 def won_or_lost(game, user, guess1, guess2):
-	"""Add docstring"""
+	"""Determine if the game is over and if the player won or lost;
+	return the won_lost_msg"""
 	# Add guess1 and guess2 to the guess_history
 	history_msg = 'Guess: ' + guess1 + ', ' + guess2
 	game.guess_history.append(history_msg)
@@ -95,7 +112,8 @@ def won_or_lost(game, user, guess1, guess2):
 
 
 def points(game, guesses_made, matches_found, user):
-	"""Add docstring"""
+	"""(If the game is over) determines how many points and
+	points_per_guess the player earned"""
 	if game.matches_found == 1 or game.attempts_remaining < 1:
 		points=(500 - ((guesses_made - matches_found) * 10))
 		total_guesses = user.total_guesses
