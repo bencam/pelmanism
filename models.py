@@ -1,8 +1,16 @@
 #!/usr/bin/env python
 
-"""In models.py the class definitions for the Google Datastore entities
-that pelmanism uses are defined.
-Message classes are also included in this file."""
+"""
+The class definitions for the Google Datastore entities used by
+Pelmanism are defined in models.py.
+
+Pelmansim is made up of four models: User, Game, Guess1 and Score.
+
+Message classes are also included in models.py. These are: GameForm,
+GameFormUserGames, GameForms, NewGameForm, MakeMoveForm, ScoreForm,
+ScoreForms, UserRanking, UserRankings, GameHistory and StringMessage.
+
+"""
 
 
 import random
@@ -22,7 +30,7 @@ class User(ndb.Model):
 	points_per_guess = ndb.IntegerProperty(required=True)
 
 	def to_rankings_form(self):
-		"""Add docstring"""
+		"""Return a UserRanking representation of the User"""
 		return UserRanking(
 			user_name=self.name,
 			games_played=self.games_played,
@@ -32,8 +40,7 @@ class User(ndb.Model):
 
 
 class Game(ndb.Model):
-	"""ADD in docstring"""
-	# This is the actual game object
+	"""Game object"""
 	deck = ndb.StringProperty(repeated=True)
 	disp_deck = ndb.StringProperty(repeated=True)
 	attempts_allowed = ndb.IntegerProperty(required=True)
@@ -52,13 +59,11 @@ class Game(ndb.Model):
 	def new_game(cls, user, attempts, deck, disp_deck, guesses_made,
 		match_list, match_list_int, matches_found, move1_or_move2,
 		guess_history):
-		"""ADD in docstring"""
-		# This function is for creating a new game
-		# Check to make sure the number of attempts is less than 61
+		"""Create and return a new game"""
 		if attempts > 60:
 			raise ValueError(
 				'Number of attempts can be no more than 75!')
-		# After testing, ADD IN: must be > 20 in bit above
+		# After TESTING, ADD IN: must be > 20 in bit above
 		game = Game(
 			user=user,
 			deck=deck,
@@ -73,20 +78,18 @@ class Game(ndb.Model):
 			game_over=False,
 			cancelled=False,
 			guess_history=guess_history)
-		# Here we store (or create, then store) the stuff in the db
 		game.put()
 		return game
 
 	def to_form(self, message):
-		"""ADD in docstring"""
-		# This returns a GameForm representation of Game
+		"""Return a GameForm representation of the game"""
 		form = GameForm()
 		form.urlsafe_key = self.key.urlsafe()
 		form.user_name = self.user.get().name
 		form.attempts_remaining = self.attempts_remaining
 		form.game_over = self.game_over
 		form.cancelled = self.cancelled
-		form.deck = self.deck  # TESTING TESTING TESTING TESTING
+		form.deck = self.deck  # TESTING
 		form.disp_deck = self.disp_deck
 		form.guesses_made = self.guesses_made
 		form.match_list = self.match_list
@@ -95,7 +98,9 @@ class Game(ndb.Model):
 		return form
 
 	def to_form_user_games(self):
-		"""Add docstring"""
+		"""Return a GameFormUserGames representation of the game;
+		this form displays a custom list of the game entities and is
+		used in the get_user_games endpoint"""
 		return GameFormUserGames(
 			urlsafe_key=self.key.urlsafe(),
 			user_name=self.user.get().name,
@@ -107,7 +112,9 @@ class Game(ndb.Model):
 			matches_found=self.matches_found)
 
 	def to_form_game_history(self, message):
-		"""Add docstring"""
+		"""Return a GameHistory representation of the game;
+		this form displays a custom list of the game entities and is
+		used in the get_game_history endpoint"""
 		return GameHistory(
 			user_name=self.user.get().name,
 			guess_history=self.guess_history,
@@ -118,14 +125,12 @@ class Game(ndb.Model):
 			message=message)
 
 	def end_game(self, won=False):
-		"""End the game;
-		if won is True, the player won;
-		if won is False, the player lost)"""
+		"""End the game; if won is True, the player won;
+		if won is False, the player lost"""
 		self.game_over = True
 		self.put()
 
 		# Add the game to the score board
-		# I think this is where we actually instantiate a Score object
 		# (a score is only returned when a game ends)
 		points = self.points=(
 			500 - ((self.guesses_made - self.matches_found) * 10))
@@ -138,19 +143,22 @@ class Game(ndb.Model):
 			matches_found=self.matches_found,
 			points=points)
 		score.put()
+		# TESTING LINES
 		print ''
 		print 'This is the score: %s' % score
 		print ''
+		# END TESTING LINES
 
 
 class Guess1(ndb.Model):
-	"""Add in docstring"""
+	"""Guess1 object"""
+	# The Guess1 model is used ... 
 	guess1 = ndb.StringProperty(required=True)
 	guess1_int = ndb.IntegerProperty(required=True)
 
 
 class Score(ndb.Model):
-	"""Add in docstring"""
+	"""Score object"""
 	user = ndb.KeyProperty(required=True, kind='User')
 	date = ndb.DateProperty(required=True)
 	won = ndb.BooleanProperty(required=True)
@@ -160,8 +168,7 @@ class Score(ndb.Model):
 	points = ndb.IntegerProperty(required=True)
 
 	def to_form(self):
-		"""Add docstring"""
-		# This returns a ScoreForm representation of Score
+		"""Return a ScoreForm representation of the score"""
 		return ScoreForm(
 			user_name=self.user.get().name,
 			won=self.won,
@@ -174,10 +181,8 @@ class Score(ndb.Model):
 
 
 # ------------------------Message definitions------------------------
-# Here we imply create messages (not Datastore entities)
 class GameForm(messages.Message):
-	"""Add in docstring"""
-	# This is the form we send to the person making the request
+	"""Used for outbound game information"""
 	urlsafe_key = messages.StringField(1, required=True)
 	attempts_remaining = messages.IntegerField(2, required=True)
 	game_over = messages.BooleanField(3, required=True)
@@ -192,7 +197,8 @@ class GameForm(messages.Message):
 
 
 class GameFormUserGames(messages.Message):
-	"""Add in docstring"""
+	"""Used for outbound information on the state of a
+	user's active games"""
 	urlsafe_key = messages.StringField(1, required=True)
 	attempts_remaining = messages.IntegerField(2, required=True)
 	game_over = messages.BooleanField(3, required=True)
@@ -204,48 +210,40 @@ class GameFormUserGames(messages.Message):
 
 
 class GameForms(messages.Message):
-	"""Add docstring"""
+	"""Return a list of GameFormUserGames"""
 	items = messages.MessageField(GameFormUserGames, 1, repeated=True)
 
 
 class NewGameForm(messages.Message):
-	"""Add in docstring"""
-	# This is the form the person making the request fills out
-	# when they want to create a new game
+	"""A form the user completes to create a new game"""
 	user_name = messages.StringField(1, required=True)
 	attempts = messages.IntegerField(2, default=5)
 
 
 class MakeMoveForm(messages.Message):
-	"""Add in docstring"""
-	# This is the form the person making the request
-	# fills out to make a move
+	"""A form the user completes when making a move"""
 	guess = messages.IntegerField(1, required=True)
 
 
 class ScoreForm(messages.Message):
-	"""Add docstring"""
-	# This is a form we send to the person making the request
+	"""Used for outbound score information"""
 	user_name = messages.StringField(1, required=True)
 	date = messages.StringField(2, required=True)
 	won = messages.BooleanField(3, required=True)
 	guesses_made = messages.IntegerField(4, required=True)
 	game_deck = messages.StringField(5, repeated=True)
 	matches_found = messages.IntegerField(6, required=True, default=0)
-	points = messages.IntegerField(7)  # required=True ADD AFTER ... 
-	# CLEARING THE DATABASE
+	points = messages.IntegerField(7, required=True, default=0)
 
 
 class ScoreForms(messages.Message):
-	"""Add docstring"""
-	# We send this form to the person making the request
-	# It gives a list of all of the score objects
+	"""Return a list of ScoreForm[s]"""
 	items = messages.MessageField(ScoreForm, 1, repeated=True)
 
 
 class UserRanking(messages.Message):
-	"""Add docstring"""
-	# Players are ranked by points_per_guess
+	"""Return information regarding user rankings (players are
+	ranked by points_per_guess; total_points is used to break a tie)"""
 	user_name = messages.StringField(1, required=True)
 	games_played = messages.IntegerField(2, required=True)
 	total_guesses = messages.IntegerField(3, required=True)
@@ -254,12 +252,12 @@ class UserRanking(messages.Message):
 
 
 class UserRankings(messages.Message):
-	"""Add docstring"""
+	"""Return a list of UserRanking[s]"""
 	items = messages.MessageField(UserRanking, 1, repeated=True)
 
 
 class GameHistory(messages.Message):
-	"""Add docstring"""
+	"""Return GameHistory information"""
 	user_name = messages.StringField(1, required=True)
 	guess_history = messages.StringField(2, repeated=True)
 	guesses_made = messages.IntegerField(3, required=True)
@@ -270,6 +268,6 @@ class GameHistory(messages.Message):
 
 
 class StringMessage(messages.Message):
-	"""Add in docstring"""
+	"""A single outbound string message"""
 	message = messages.StringField(1, required=True)
 # ----------------------End message definitions----------------------
