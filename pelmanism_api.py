@@ -1,9 +1,22 @@
 #!/usr/bin/env python
 
-"""Add docstring"""
+
+"""
+The Pelmanism API is made up of 12 endpoints, and these are built and
+configured in pelmanism_api.py.
+
+The endpoints are as follows: create_user, new_game, get_game,
+make_move, get_scores, get_user_scores, get_average_attempts_remaining,
+get_user_games, cancel_game, get_high_scores, get_user_rankings,
+get_game_history.
+
+The class definitions for the Google Datastore entities used by
+Pelmanism are defined in models.py, and the game_logic.py file contains
+several functions used in the make_move endpoint.
+
+"""
 
 
-# ------------------------------Imports------------------------------
 import logging
 import endpoints
 
@@ -20,10 +33,9 @@ from models import ScoreForms, GameForms, UserRankings, GameHistory
 import game_logic
 
 from utils import get_by_urlsafe
-# ----------------------------End imports----------------------------
 
 
-# ---------------------------Gloabl variables------------------------
+# Define global variables
 NEW_GAME_REQUEST = endpoints.ResourceContainer(NewGameForm)
 GET_GAME_REQUEST = endpoints.ResourceContainer(
 	urlsafe_game_key=messages.StringField(1),)
@@ -39,21 +51,16 @@ CANCEL_GAME = endpoints.ResourceContainer(
 HIGH_SCORES = endpoints.ResourceContainer(
 	number_of_results=messages.IntegerField(1))
 MEMCACHE_MOVES_REMAINING = 'MOVES_REMAINING'
-# ------------------------End gloabl variables-----------------------
 
 
-# --------------------Define the endpoints class---------------------
-# Define the endpoints class for the api
-# We only do this once, then we put all of the actual endpoints
-# below (and within) this class
+# Define the endpoints class for the API
 @endpoints.api(name='pelmanism', version='v1',
 			   description='Pelmanism API')
 class PelmanismApi(remote.Service):
 	"""Define Pelmanism API v1"""
-# -------------------End define endpoints class----------------------
 
 
-# ---------------------------Endpoints-------------------------------
+# Define the endpoints
 	# CREATE USER endpoint ---
 	@endpoints.method(
 		request_message=USER_REQUEST,
@@ -62,7 +69,7 @@ class PelmanismApi(remote.Service):
 		name='create_user',
 		http_method='POST')
 	def create_user(self, request):
-		"""ADD in docstring"""
+		"""Create a user; a unique username is required"""
 		if User.query(User.name == request.user_name).get():
 			raise endpoints.ConflictException(
 				'A user with that name already exists.')
@@ -70,9 +77,6 @@ class PelmanismApi(remote.Service):
 			games_played=0, total_guesses=0, total_points=0,
 			points_per_guess=0)
 		user.put()
-		print ''
-		print 'This is the user: %s' % user
-		print ''
 		return StringMessage(message='User {} created!'.format(
 			request.user_name))
 
@@ -85,7 +89,7 @@ class PelmanismApi(remote.Service):
 		name='new_game',
 		http_method='POST')
 	def new_game(self, request):
-		"""ADD in docstring"""
+		"""Create a new game"""
 		user = User.query(User.name == request.user_name).get()
 		if not user:
 			raise endpoints.NotFoundException(
@@ -127,9 +131,9 @@ class PelmanismApi(remote.Service):
 		name='get_game',
 		http_method='GET')
 	def get_game(self, request):
-		"""Add in docstring"""
+		"""Return the current state of an active game"""
 		# Check to see if the urlsafe_game_key matches a game
-		# in the Datastore
+		# in the datastore
 		game = get_by_urlsafe(request.urlsafe_game_key, Game)
 		if game:
 			if game.game_over:
@@ -149,16 +153,23 @@ class PelmanismApi(remote.Service):
 		name='make_move',
 		http_method='PUT')
 	def make_move(self, request):
-		"""Add in docstring"""
+		"""Take a turn (this consists of two moves);
+		return a game state with message"""
 		# Set up variables for making the first and second moves
 		game = get_by_urlsafe(request.urlsafe_game_key, Game)
 		user = User.query(game.user == User.key).get()
 		deck = game.deck
+		# A list of the integers that correspond to each card that
+		# has been matched
 		mli = game.match_list_int
+		# A list of card values (e.g. 'B' or 'H') that have been matched
 		match_list = game.match_list
 
 		# FIRST MOVE
+		# The move1_or_move2 property is used to determine if the player
+		# is flipping over their first or second card of the turn
 		if game.move1_or_move2 % 2 == 0:
+
 			# Query the Guess1 db and delete previous entry
 			# (This ensures only the most recent guess1 is in the db
 			# thus simplifying the second move)
@@ -188,7 +199,7 @@ class PelmanismApi(remote.Service):
 			# Display the deck with the chosen card flipped over
 			game.disp_deck[guess1_int] = guess1
 
-			# Add the guess into the db
+			# Add the guess into the database
 			guess1_db = Guess1(guess1=guess1, guess1_int=guess1_int)
 			guess1_db.put()
 
@@ -199,7 +210,7 @@ class PelmanismApi(remote.Service):
 
 		# SECOND MOVE
 		else:
-			# Retrieve guess1 from the db to check for a match
+			# Retrieve guess1 from the database to check for a match
 			guess1 = Guess1.query().get()
 			print '\nThis is guess1: %s' % guess1 + '\n'  # TESTING
 
@@ -230,7 +241,7 @@ class PelmanismApi(remote.Service):
 			# Determine if a match was found and if the game is over
 			if guess1.guess1 == guess2:
 				match_list.extend(guess1.guess1)
-				match_list.extend(guess2)  # Make these one line
+				match_list.extend(guess2)
 				mli.append(guess1.guess1_int)
 				mli.append(guess2_int)
 				game.matches_found += 1
@@ -262,7 +273,7 @@ class PelmanismApi(remote.Service):
 		name='get_scores',
 		http_method='GET')
 	def get_scores(self, request):
-		"""Add docstring"""
+		"""Return all scores sorted by points"""
 		return ScoreForms(
 			items=[score.to_form() for score in Score.query(
 				).order(-Score.points)])
@@ -276,7 +287,7 @@ class PelmanismApi(remote.Service):
 		name='get_user_scores',
 		http_method='GET')
 	def get_user_scores(self, request):
-		"""Add docstring"""
+		"""Return all of an individual user's scores sorted by points"""
 		user = User.query(User.name == request.user_name).get()
 		if not user:
 			raise endpoints.NotFoundException(
@@ -292,13 +303,13 @@ class PelmanismApi(remote.Service):
 		name='get_average_attempts_remaining',
 		http_method='GET')
 	def get_average_attempts(self, request):
-		"""Add docstring"""
+		"""Return the cached average attempts remaining"""
 		return StringMessage(message=memcache.get(
 			MEMCACHE_MOVES_REMAINING) or '')
 
 	@staticmethod
 	def _cache_average_attempts():
-		"""Add docstring"""
+		"""Populate the memcache with the average moves remaining"""
 		games = Game.query(Game.game_over == False).fetch()
 		if games:
 			count = len(games)
@@ -317,7 +328,8 @@ class PelmanismApi(remote.Service):
 		name='get_user_games',
 		http_method='GET')
 	def get_user_games(self, request):
-		"""Add docstring ... sorted by time_created"""
+		"""Return a user's active games sorted by the time each game
+		was created"""
 		user = User.query(User.name == request.user_name).get()
 		if not user:
 			raise endpoints.NotFoundException(
@@ -344,7 +356,7 @@ class PelmanismApi(remote.Service):
 		name='cancel_game',
 		http_method='PUT')
 	def cancel_game(self, request):
-		"""Add docstring"""
+		"""Cancel a game"""
 		user = User.query(User.name == request.user_name).get()
 		if not user:
 			raise endpoints.NotFoundException(
@@ -369,7 +381,8 @@ class PelmanismApi(remote.Service):
 		name='get_high_scores',
 		http_method='GET')
 	def get_high_scores(self, request):
-		"""Add docstring"""
+		"""Return all scores sorted by points; an optional parameter
+		(number_of_results) limits the number of results returned"""
 		num = request.number_of_results
 		if num:
 			scores = Score.query().order(-Score.points).fetch(num)
@@ -386,7 +399,9 @@ class PelmanismApi(remote.Service):
 		name='get_user_rankings',
 		http_method='GET')
 	def get_user_rankings(self, request):
-		"""Add docstring"""
+		"""Return a list of users ranked by points_per_guess
+		(points_per_guess is determined by total_points / total_guesses);
+		a tie is broken by total_points"""
 		u_rankings = User.query().order(
 			-User.points_per_guess, -User.total_points).fetch()
 		return UserRankings(
@@ -401,9 +416,8 @@ class PelmanismApi(remote.Service):
 		name='get_game_history',
 		http_method='GET')
 	def get_game_history(self, request):
-		"""Add docstring"""
-		# Check to see if the urlsafe_game_key matches a game
-		# in the Datastore
+		"""Return a list of guesses made throughout the course of
+		a completed game as well as the end result of the game"""
 		game = get_by_urlsafe(request.urlsafe_game_key, Game)
 		if game:
 			if game.game_over:
@@ -417,7 +431,6 @@ class PelmanismApi(remote.Service):
 					'The game is not over yet!')
 		else:
 			raise endpoints.NotFoundException('Game not found!')
-# ---------------------------End endpoints---------------------------
 
 
 # Start the API server
