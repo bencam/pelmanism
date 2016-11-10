@@ -264,7 +264,8 @@ class PelmanismApi(remote.Service):
 	def get_scores(self, request):
 		"""Add docstring"""
 		return ScoreForms(
-			items=[score.to_form() for score in Score.query()])
+			items=[score.to_form() for score in Score.query(
+				).order(-Score.points)])
 
 
 	# GET USER SCORES endpoint ---
@@ -280,7 +281,7 @@ class PelmanismApi(remote.Service):
 		if not user:
 			raise endpoints.NotFoundException(
 				'A user with that name does not exist!')
-		scores = Score.query(Score.user == user.key)
+		scores = Score.query(Score.user == user.key).order(-Score.points)
 		return ScoreForms(items=[score.to_form() for score in scores])
 
 
@@ -316,13 +317,14 @@ class PelmanismApi(remote.Service):
 		name='get_user_games',
 		http_method='GET')
 	def get_user_games(self, request):
-		"""Add docstring"""
+		"""Add docstring ... sorted by time_created"""
 		user = User.query(User.name == request.user_name).get()
 		if not user:
 			raise endpoints.NotFoundException(
 				'A user with that name does not exist!')
 		# Get a list of all of a user's games
-		games = Game.query(Game.user == user.key).fetch()
+		games = Game.query(
+			Game.user == user.key).order(-Game.time_created).fetch()
 
 		# Filter out completed and cancelled games; return what's left
 		game_lst = []
@@ -424,8 +426,8 @@ api = endpoints.api_server([PelmanismApi])
 
 # SOURCES
 
-# Pelmanism is based off of a game (called 'Guess a Number') developed
-# by Udacity for Google App Engine. While this project is both different
+# Pelmanism is based off of a game API (called 'Guess a Number') developed
+# by Udacity on Google App Engine. While this project is both different
 # from and more complicated than Guess a Number, the Guess a Number
 # scripts were used as a baseline for Pelmanism.
 

@@ -14,7 +14,7 @@ ScoreForms, UserRanking, UserRankings, GameHistory and StringMessage.
 
 
 import random
-from datetime import date
+from datetime import datetime
 from protorpc import messages
 from google.appengine.ext import ndb
 
@@ -53,6 +53,7 @@ class Game(ndb.Model):
 	move1_or_move2 = ndb.IntegerProperty()
 	cancelled = ndb.BooleanProperty(required=True, default=False)
 	guess_history = ndb.StringProperty(repeated=True)
+	time_created = ndb.StringProperty(required=True)
 	user = ndb.KeyProperty(required=True, kind='User')
 
 	@classmethod
@@ -77,7 +78,8 @@ class Game(ndb.Model):
 			move1_or_move2=move1_or_move2,
 			game_over=False,
 			cancelled=False,
-			guess_history=guess_history)
+			guess_history=guess_history,
+			time_created=str(datetime.now()))
 		game.put()
 		return game
 
@@ -94,6 +96,7 @@ class Game(ndb.Model):
 		form.guesses_made = self.guesses_made
 		form.match_list = self.match_list
 		form.matches_found = self.matches_found
+		form.time_created = self.time_created
 		form.message = message
 		return form
 
@@ -109,7 +112,8 @@ class Game(ndb.Model):
 			disp_deck=self.disp_deck,
 			guesses_made=self.guesses_made,
 			match_list=self.match_list,
-			matches_found=self.matches_found)
+			matches_found=self.matches_found,
+			time_created=self.time_created)
 
 	def to_form_game_history(self, message):
 		"""Return a GameHistory representation of the game;
@@ -122,6 +126,7 @@ class Game(ndb.Model):
 			match_list=self.match_list,
 			matches_found=self.matches_found,
 			deck=self.deck,
+			time_created=self.time_created,
 			message=message)
 
 	def end_game(self, won=False):
@@ -136,7 +141,7 @@ class Game(ndb.Model):
 			500 - ((self.guesses_made - self.matches_found) * 10))
 		score = Score(
 			user=self.user,
-			date=date.today(),
+			time_completed=str(datetime.now()),
 			won=won,
 			guesses_made=self.guesses_made,
 			game_deck=self.deck,
@@ -152,7 +157,6 @@ class Game(ndb.Model):
 
 class Guess1(ndb.Model):
 	"""Guess1 object"""
-	# The Guess1 model is used ... 
 	guess1 = ndb.StringProperty(required=True)
 	guess1_int = ndb.IntegerProperty(required=True)
 
@@ -160,7 +164,7 @@ class Guess1(ndb.Model):
 class Score(ndb.Model):
 	"""Score object"""
 	user = ndb.KeyProperty(required=True, kind='User')
-	date = ndb.DateProperty(required=True)
+	time_completed = ndb.StringProperty(required=True)
 	won = ndb.BooleanProperty(required=True)
 	guesses_made = ndb.IntegerProperty(required=True)
 	game_deck = ndb.StringProperty(repeated=True)
@@ -172,7 +176,7 @@ class Score(ndb.Model):
 		return ScoreForm(
 			user_name=self.user.get().name,
 			won=self.won,
-			date=str(self.date),
+			time_completed=self.time_completed,
 			guesses_made=self.guesses_made,
 			game_deck=self.game_deck,
 			matches_found=self.matches_found,
@@ -193,7 +197,8 @@ class GameForm(messages.Message):
 	match_list = messages.StringField(8, repeated=True)
 	matches_found = messages.IntegerField(9, required=True)
 	cancelled = messages.BooleanField(10, required=True)
-	deck = messages.StringField(11, repeated=True)  # TESTING
+	time_created = messages.StringField(11, required=True)
+	deck = messages.StringField(12, repeated=True)  # TESTING
 
 
 class GameFormUserGames(messages.Message):
@@ -207,6 +212,7 @@ class GameFormUserGames(messages.Message):
 	guesses_made = messages.IntegerField(6, required=True)
 	match_list = messages.StringField(7, repeated=True)
 	matches_found = messages.IntegerField(8, required=True)
+	time_created = messages.StringField(9, required=True)
 
 
 class GameForms(messages.Message):
@@ -228,7 +234,7 @@ class MakeMoveForm(messages.Message):
 class ScoreForm(messages.Message):
 	"""Used for outbound score information"""
 	user_name = messages.StringField(1, required=True)
-	date = messages.StringField(2, required=True)
+	time_completed = messages.StringField(2, required=True)
 	won = messages.BooleanField(3, required=True)
 	guesses_made = messages.IntegerField(4, required=True)
 	game_deck = messages.StringField(5, repeated=True)
@@ -264,7 +270,8 @@ class GameHistory(messages.Message):
 	match_list = messages.StringField(4, repeated=True)
 	matches_found = messages.IntegerField(5, required=True)
 	deck = messages.StringField(6, repeated=True)
-	message = messages.StringField(7)
+	time_created = messages.StringField(7, required=True)
+	message = messages.StringField(8)
 
 
 class StringMessage(messages.Message):
