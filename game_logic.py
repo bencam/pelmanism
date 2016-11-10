@@ -7,7 +7,7 @@ The game_logic.py file contains five functions needed to play Pelmanism:
 1. deck_creation() creates a list of 20 cards selected at random
 2. guess_error() checks to make sure a chosen card is (a) in the deck
 	and (b) is not already part of a matched pair
-3. reset_deck() seset the deck so that cards flipped over in the most
+3. reset_deck() reset the deck so that cards flipped over in the most
 	recent turn are flipped back over when the next turn starts;
 	cards that have been matched are left as an 'X'
 4. won_or_lost() determines if the game is over and if the player won
@@ -112,7 +112,7 @@ def won_or_lost(game, user, guess1, guess2):
 
 
 def points(game, guesses_made, matches_found, user):
-	"""(If the game is over) determines how many points and
+	"""(If the game is over) determine how many points and
 	points_per_guess the player earned"""
 	if game.matches_found == 1 or game.attempts_remaining < 1:
 		points=(500 - ((guesses_made - matches_found) * 10))
