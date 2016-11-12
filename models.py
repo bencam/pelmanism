@@ -2,12 +2,12 @@
 
 """
 The class definitions for the Google Datastore entities used by
-Pelmanism are defined in models.py.
+Pelmanism are defined in models.py. Helper methods are also included.
 
 Pelmansim is made up of four models: User, Game, Guess1 and Score.
 
 Message classes are also included in models.py. These are: GameForm,
-GameFormUserGames, GameForms, NewGameForm, MakeMoveForm, ScoreForm,
+GameFormUserGame, GameForms, NewGameForm, MakeMoveForm, ScoreForm,
 ScoreForms, UserRanking, UserRankings, GameHistory and StringMessage.
 
 """
@@ -64,7 +64,7 @@ class Game(ndb.Model):
 		if attempts > 60:
 			raise ValueError(
 				'Number of attempts can be no more than 75!')
-		# After TESTING, ADD IN: must be > 20 in bit above
+		# After TESTING, ADD IN: must be > 30 in bit above
 		game = Game(
 			user=user,
 			deck=deck,
@@ -101,10 +101,10 @@ class Game(ndb.Model):
 		return form
 
 	def to_form_user_games(self):
-		"""Return a GameFormUserGames representation of the game;
+		"""Return a GameFormUserGame representation of the game;
 		this form displays a custom list of the game entities and is
 		used in the get_user_games endpoint"""
-		return GameFormUserGames(
+		return GameFormUserGame(
 			urlsafe_key=self.key.urlsafe(),
 			user_name=self.user.get().name,
 			attempts_remaining=self.attempts_remaining,
@@ -156,7 +156,8 @@ class Game(ndb.Model):
 
 
 class Guess1(ndb.Model):
-	"""Guess1 object"""
+	"""Guess1 object; this is compared with the guess2 and guess2_int
+	attributes in the make_move endpoint in pelmansim_api.py"""
 	guess1 = ndb.StringProperty(required=True)
 	guess1_int = ndb.IntegerProperty(required=True)
 
@@ -201,9 +202,9 @@ class GameForm(messages.Message):
 	deck = messages.StringField(12, repeated=True)  # TESTING
 
 
-class GameFormUserGames(messages.Message):
+class GameFormUserGame(messages.Message):
 	"""Used for outbound information on the state of a
-	user's active games"""
+	user's active game"""
 	urlsafe_key = messages.StringField(1, required=True)
 	attempts_remaining = messages.IntegerField(2, required=True)
 	game_over = messages.BooleanField(3, required=True)
@@ -216,23 +217,23 @@ class GameFormUserGames(messages.Message):
 
 
 class GameForms(messages.Message):
-	"""Return a list of GameFormUserGames"""
-	items = messages.MessageField(GameFormUserGames, 1, repeated=True)
+	"""Outbound container for a list of GameFormUserGame forms"""
+	items = messages.MessageField(GameFormUserGame, 1, repeated=True)
 
 
 class NewGameForm(messages.Message):
-	"""A form the user completes to create a new game"""
+	"""Inbound form used to create a new game"""
 	user_name = messages.StringField(1, required=True)
 	attempts = messages.IntegerField(2, default=5)
 
 
 class MakeMoveForm(messages.Message):
-	"""A form the user completes when making a move"""
+	"""Inbound form used to make a move"""
 	guess = messages.IntegerField(1, required=True)
 
 
 class ScoreForm(messages.Message):
-	"""Used for outbound score information"""
+	"""Used for outbound score information for finished games"""
 	user_name = messages.StringField(1, required=True)
 	time_completed = messages.StringField(2, required=True)
 	won = messages.BooleanField(3, required=True)
@@ -243,12 +244,12 @@ class ScoreForm(messages.Message):
 
 
 class ScoreForms(messages.Message):
-	"""Return a list of ScoreForm[s]"""
+	"""Outbound container for a list of ScoreForm forms"""
 	items = messages.MessageField(ScoreForm, 1, repeated=True)
 
 
 class UserRanking(messages.Message):
-	"""Return information regarding user rankings (players are
+	"""Used for outbound information regarding user rankings (players are
 	ranked by points_per_guess; total_points is used to break a tie)"""
 	user_name = messages.StringField(1, required=True)
 	games_played = messages.IntegerField(2, required=True)
@@ -258,12 +259,13 @@ class UserRanking(messages.Message):
 
 
 class UserRankings(messages.Message):
-	"""Return a list of UserRanking[s]"""
+	"""Outbound container for a list of UserRanking forms"""
 	items = messages.MessageField(UserRanking, 1, repeated=True)
 
 
 class GameHistory(messages.Message):
-	"""Return GameHistory information"""
+	"""Used for outbound information on each guess made
+	and the outcome of a game"""
 	user_name = messages.StringField(1, required=True)
 	guess_history = messages.StringField(2, repeated=True)
 	guesses_made = messages.IntegerField(3, required=True)
