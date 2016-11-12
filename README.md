@@ -11,15 +11,17 @@ Each move consists of 'turning face up' or 'flipping over' two cards; each card 
 
 Many users can play Pelmanism games at the same time, and each game can be played or retrieved by using the `urlsafe_game_key` path parameter.
 
-Add in details about scoring, etc.
+Points are awarded at the end of each game. The following formula is used to determine how many points are awarded: `points = (500 - ((attempts_made - matches_found) * 10))`. Users can view points earned by themselves and other users with the `get_scores`, `get_user_scores`, and `get_high_scores` endpoints.
+
+Each user profile includes `games_played`, `total_attempts`, `total_points`, and `points_per_guess` properties. These are updated at the conclusion of each game played. The `points_per_guess` property is determined with the following formula: `points_per_guess = total_points / total_attempts`. Users can see how the rank against other users with the `get_user_rankings` endpoint. Users are ranked by the `points_per_guess` property; in the event of a tie, users are ranked according to the `total_points` property.
+
+The `get_game_history` endpoint provides a user with a summary of each move taken during the course of a completed game. The endpoint also indicates how the game ended (i.e. did the player win or lose?).
 
 More details about the game Pelmanism--and variations of it--can be found [here](https://en.wikipedia.org/wiki/Concentration_(game)).
 
 
 ## Install and set-up instructions
-1. Install Pelmanism by cloning the Pelmanism repository on GitHub:
-
-`$ git clone https://github.com/bencam/pelmanism.git`
+1. Install Pelmanism by cloning the Pelmanism repository on GitHub: `$ git clone https://github.com/bencam/pelmanism.git`
 
 1. Create a new project on the [Google API Console](console.developers.google.com). Add the app ID of the new project to the application value in app.yaml (line 1). This app ID will be used to host your instance of the API.
 
