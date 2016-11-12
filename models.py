@@ -25,7 +25,7 @@ class User(ndb.Model):
 	name = ndb.StringProperty(required=True)
 	email = ndb.StringProperty()
 	games_played = ndb.IntegerProperty(required=True)
-	total_guesses = ndb.IntegerProperty(required=True)
+	total_attempts = ndb.IntegerProperty(required=True)
 	total_points = ndb.IntegerProperty(required=True)
 	points_per_guess = ndb.IntegerProperty(required=True)
 
@@ -34,7 +34,7 @@ class User(ndb.Model):
 		return UserRanking(
 			user_name=self.name,
 			games_played=self.games_played,
-			total_guesses=self.total_guesses,
+			total_attempts=self.total_attempts,
 			total_points=self.total_points,
 			points_per_guess=self.points_per_guess)
 
@@ -46,19 +46,19 @@ class Game(ndb.Model):
 	attempts_allowed = ndb.IntegerProperty(required=True)
 	attempts_remaining = ndb.IntegerProperty(required=True, default=30)
 	game_over = ndb.BooleanProperty(required=True, default=False)
-	guesses_made = ndb.IntegerProperty(required=True)
+	attempts_made = ndb.IntegerProperty(required=True)
 	match_list = ndb.StringProperty(repeated=True)
 	match_list_int = ndb.IntegerProperty(repeated=True)
 	matches_found = ndb.IntegerProperty(required=True)
-	move1_or_move2 = ndb.IntegerProperty()
+	guess1_or_guess2 = ndb.IntegerProperty()
 	cancelled = ndb.BooleanProperty(required=True, default=False)
 	guess_history = ndb.StringProperty(repeated=True)
 	time_created = ndb.StringProperty(required=True)
 	user = ndb.KeyProperty(required=True, kind='User')
 
 	@classmethod
-	def new_game(cls, user, attempts, deck, disp_deck, guesses_made,
-		match_list, match_list_int, matches_found, move1_or_move2,
+	def new_game(cls, user, attempts, deck, disp_deck, attempts_made,
+		match_list, match_list_int, matches_found, guess1_or_guess2,
 		guess_history):
 		"""Create and return a new game"""
 		if attempts > 60:
@@ -71,11 +71,11 @@ class Game(ndb.Model):
 			attempts_allowed=attempts,
 			attempts_remaining=attempts,
 			disp_deck=disp_deck,
-			guesses_made=guesses_made,
+			attempts_made=attempts_made,
 			match_list=match_list,
 			match_list_int=match_list_int,
 			matches_found=matches_found,
-			move1_or_move2=move1_or_move2,
+			guess1_or_guess2=guess1_or_guess2,
 			game_over=False,
 			cancelled=False,
 			guess_history=guess_history,
@@ -93,7 +93,7 @@ class Game(ndb.Model):
 		form.cancelled = self.cancelled
 		form.deck = self.deck  # TESTING
 		form.disp_deck = self.disp_deck
-		form.guesses_made = self.guesses_made
+		form.attempts_made = self.attempts_made
 		form.match_list = self.match_list
 		form.matches_found = self.matches_found
 		form.time_created = self.time_created
@@ -110,7 +110,7 @@ class Game(ndb.Model):
 			attempts_remaining=self.attempts_remaining,
 			game_over=self.game_over,
 			disp_deck=self.disp_deck,
-			guesses_made=self.guesses_made,
+			attempts_made=self.attempts_made,
 			match_list=self.match_list,
 			matches_found=self.matches_found,
 			time_created=self.time_created)
@@ -122,7 +122,7 @@ class Game(ndb.Model):
 		return GameHistory(
 			user_name=self.user.get().name,
 			guess_history=self.guess_history,
-			guesses_made=self.guesses_made,
+			attempts_made=self.attempts_made,
 			match_list=self.match_list,
 			matches_found=self.matches_found,
 			deck=self.deck,
@@ -138,12 +138,12 @@ class Game(ndb.Model):
 		# Add the game to the score board
 		# (a score is only returned when a game ends)
 		points = self.points=(
-			500 - ((self.guesses_made - self.matches_found) * 10))
+			500 - ((self.attempts_made - self.matches_found) * 10))
 		score = Score(
 			user=self.user,
 			time_completed=str(datetime.now()),
 			won=won,
-			guesses_made=self.guesses_made,
+			attempts_made=self.attempts_made,
 			game_deck=self.deck,
 			matches_found=self.matches_found,
 			points=points)
@@ -167,7 +167,7 @@ class Score(ndb.Model):
 	user = ndb.KeyProperty(required=True, kind='User')
 	time_completed = ndb.StringProperty(required=True)
 	won = ndb.BooleanProperty(required=True)
-	guesses_made = ndb.IntegerProperty(required=True)
+	attempts_made = ndb.IntegerProperty(required=True)
 	game_deck = ndb.StringProperty(repeated=True)
 	matches_found = ndb.IntegerProperty(required=True)
 	points = ndb.IntegerProperty(required=True)
@@ -178,7 +178,7 @@ class Score(ndb.Model):
 			user_name=self.user.get().name,
 			won=self.won,
 			time_completed=self.time_completed,
-			guesses_made=self.guesses_made,
+			attempts_made=self.attempts_made,
 			game_deck=self.game_deck,
 			matches_found=self.matches_found,
 			points=self.points)
@@ -194,7 +194,7 @@ class GameForm(messages.Message):
 	message = messages.StringField(4, required=True)
 	user_name = messages.StringField(5, required=True)
 	disp_deck = messages.StringField(6, repeated=True)
-	guesses_made = messages.IntegerField(7, required=True)
+	attempts_made = messages.IntegerField(7, required=True)
 	match_list = messages.StringField(8, repeated=True)
 	matches_found = messages.IntegerField(9, required=True)
 	cancelled = messages.BooleanField(10, required=True)
@@ -210,7 +210,7 @@ class GameFormUserGame(messages.Message):
 	game_over = messages.BooleanField(3, required=True)
 	user_name = messages.StringField(4, required=True)
 	disp_deck = messages.StringField(5, repeated=True)
-	guesses_made = messages.IntegerField(6, required=True)
+	attempts_made = messages.IntegerField(6, required=True)
 	match_list = messages.StringField(7, repeated=True)
 	matches_found = messages.IntegerField(8, required=True)
 	time_created = messages.StringField(9, required=True)
@@ -237,7 +237,7 @@ class ScoreForm(messages.Message):
 	user_name = messages.StringField(1, required=True)
 	time_completed = messages.StringField(2, required=True)
 	won = messages.BooleanField(3, required=True)
-	guesses_made = messages.IntegerField(4, required=True)
+	attempts_made = messages.IntegerField(4, required=True)
 	game_deck = messages.StringField(5, repeated=True)
 	matches_found = messages.IntegerField(6, required=True, default=0)
 	points = messages.IntegerField(7, required=True, default=0)
@@ -253,7 +253,7 @@ class UserRanking(messages.Message):
 	ranked by points_per_guess; total_points is used to break a tie)"""
 	user_name = messages.StringField(1, required=True)
 	games_played = messages.IntegerField(2, required=True)
-	total_guesses = messages.IntegerField(3, required=True)
+	total_attempts = messages.IntegerField(3, required=True)
 	total_points = messages.IntegerField(4, required=True)
 	points_per_guess = messages.IntegerField(5, required=True)
 
@@ -268,7 +268,7 @@ class GameHistory(messages.Message):
 	and the outcome of a game"""
 	user_name = messages.StringField(1, required=True)
 	guess_history = messages.StringField(2, repeated=True)
-	guesses_made = messages.IntegerField(3, required=True)
+	attempts_made = messages.IntegerField(3, required=True)
 	match_list = messages.StringField(4, repeated=True)
 	matches_found = messages.IntegerField(5, required=True)
 	deck = messages.StringField(6, repeated=True)

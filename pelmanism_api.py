@@ -74,7 +74,7 @@ class PelmanismApi(remote.Service):
 			raise endpoints.ConflictException(
 				'A user with that name already exists.')
 		user = User(name=request.user_name, email=request.email,
-			games_played=0, total_guesses=0, total_points=0,
+			games_played=0, total_attempts=0, total_points=0,
 			points_per_guess=0)
 		user.put()
 		return StringMessage(message='User {} created!'.format(
@@ -98,18 +98,18 @@ class PelmanismApi(remote.Service):
 		# Set up game variables
 		deck = game_logic.deck_creation()
 		disp_deck = ['_' for x in range(len(deck))]
-		guesses_made = 0
+		attempts_made = 0
 		match_list = []
 		match_list_int = []
 		matches_found = 0
-		move1_or_move2 = 0
+		guess1_or_guess2 = 0
 		guess_history = []
 
 		# Attempt to create a new game object
 		try:
 			game = Game.new_game(user.key, request.attempts,
-				deck, disp_deck, guesses_made, match_list,
-				match_list_int, matches_found, move1_or_move2,
+				deck, disp_deck, attempts_made, match_list,
+				match_list_int, matches_found, guess1_or_guess2,
 				guess_history)
 		except ValueError:
 			raise endpoints.BadRequestException(
@@ -153,10 +153,10 @@ class PelmanismApi(remote.Service):
 		name='make_move',
 		http_method='PUT')
 	def make_move(self, request):
-		"""Take a turn (or make an attempt); this consists of two moves;
-		at the conclusion of the turn or attempt, return a game state
+		"""Make a move (or an attempt); this consists of two guesses;
+		at the conclusion of the move or attempt, return a game state
 		with message"""
-		# Set up variables for making the first and second moves
+		# Set up variables for making the first and second guesses
 		game = get_by_urlsafe(request.urlsafe_game_key, Game)
 		user = User.query(game.user == User.key).get()
 		deck = game.deck
@@ -166,14 +166,14 @@ class PelmanismApi(remote.Service):
 		# A list of card values (e.g. 'B' or 'H') that have been matched
 		match_list = game.match_list
 
-		# FIRST MOVE
-		# The move1_or_move2 property is used to determine if the player
-		# is flipping over their first or second card of the turn
-		if game.move1_or_move2 % 2 == 0:
+		# FIRST GUESS
+		# The guess1_or_guess2 property is used to determine if the player
+		# is flipping over their first or second card of the move
+		if game.guess1_or_guess2 % 2 == 0:
 
-			# Query the Guess1 db and delete previous entry
-			# (This ensures only the most recent guess1 is in the db
-			# thus simplifying the second move)
+			# Query the Guess1 kind and delete previous entry
+			# (This ensures only the most recent guess1 is in the
+			# database thus simplifying the second guess)
 			guess1_old = Guess1.query().get()
 			if guess1_old != None:
 				guess1_old.key.delete()
@@ -204,12 +204,12 @@ class PelmanismApi(remote.Service):
 			guess1_db = Guess1(guess1=guess1, guess1_int=guess1_int)
 			guess1_db.put()
 
-			game.move1_or_move2 += 1
+			game.guess1_or_guess2 += 1
 			game.put()
 			return game.to_form(
 				'You turned over a %s. Turn over another card.' % guess1)
 
-		# SECOND MOVE
+		# SECOND GUESS
 		else:
 			# Retrieve guess1 from the database to check for a match
 			guess1 = Guess1.query().get()
@@ -222,9 +222,9 @@ class PelmanismApi(remote.Service):
 			game_logic.guess_error(guess2_int, mli)
 
 			game.attempts_remaining -= 1
-			game.guesses_made += 1
-			game.move1_or_move2 += 1
-			user.total_guesses += 1
+			game.attempts_made += 1
+			game.guess1_or_guess2 += 1
+			user.total_attempts += 1
 			
 			# Convert guess2_int into a string variable containing
 			# the actual card value (i.e. a letter, rather than a num)
@@ -239,7 +239,7 @@ class PelmanismApi(remote.Service):
 				raise endpoints.BadRequestException(
 					msg + 'You can\'t pick the same card twice!')
 
-			# Determine if a match was found and if the game is over
+			# Determine if a match was found
 			if guess1.guess1 == guess2:
 				match_list.extend(guess1.guess1)
 				match_list.extend(guess2)
@@ -256,7 +256,7 @@ class PelmanismApi(remote.Service):
 				guess1.guess1, guess2)
 			# If the game is over, add up the points scored
 			game_logic.points(
-				game, game.guesses_made, game.matches_found, user)
+				game, game.attempts_made, game.matches_found, user)
 
 			game.put()
 			user.put()
@@ -304,14 +304,15 @@ class PelmanismApi(remote.Service):
 		name='get_average_attempts_remaining',
 		http_method='GET')
 	def get_average_attempts(self, request):
-		"""Return the cached average attempts remaining for all
-		active games"""
+		"""Return the cached average attempts (or moves) remaining
+		for all active games"""
 		return StringMessage(message=memcache.get(
 			MEMCACHE_MOVES_REMAINING) or '')
 
 	@staticmethod
 	def _cache_average_attempts():
-		"""Populate the memcache with the average moves remaining"""
+		"""Populate the memcache with the average attempts (or
+		moves) remaining"""
 		games = Game.query(Game.game_over == False).fetch()
 		if games:
 			count = len(games)
@@ -402,7 +403,7 @@ class PelmanismApi(remote.Service):
 		http_method='GET')
 	def get_user_rankings(self, request):
 		"""Return a list of users ranked by points_per_guess
-		(points_per_guess is determined by total_points / total_guesses);
+		(points_per_guess is determined by total_points / total_attempts);
 		a tie is broken by total_points"""
 		u_rankings = User.query().order(
 			-User.points_per_guess, -User.total_points).fetch()

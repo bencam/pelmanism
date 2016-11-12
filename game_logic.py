@@ -8,7 +8,7 @@ The game_logic.py file contains five functions needed to play Pelmanism:
 2. guess_error() checks to make sure a chosen card is (a) in the deck
 	and (b) is not already part of a matched pair
 3. reset_deck() reset the deck so that cards flipped over in the most
-	recent turn are flipped back over when the next turn starts;
+	recent move are turned back over when the next move starts;
 	cards that have been matched are left as an 'X'
 4. won_or_lost() determines if the game is over and if the player won
 	or lost; returns a variable (won_lost_msg) that is used in
@@ -77,7 +77,7 @@ def guess_error(guess_int, mli):
 
 def reset_deck(disp_deck, mli):
 	"""Reset the deck so that cards flipped over in the most
-	recent turn are flipped back over when the next turn starts;
+	recent move are turned back over when the next move starts;
 	cards that have been matched are left as an 'X'"""
 	for x in range(len(disp_deck)):
 		if x in mli:
@@ -111,17 +111,17 @@ def won_or_lost(game, user, guess1, guess2):
 	return won_lost_msg
 
 
-def points(game, guesses_made, matches_found, user):
+def points(game, attempts_made, matches_found, user):
 	"""(If the game is over) determine how many points and
 	points_per_guess the player earned"""
 	if game.matches_found == 1 or game.attempts_remaining < 1:
-		points=(500 - ((guesses_made - matches_found) * 10))
-		total_guesses = user.total_guesses
+		points=(500 - ((attempts_made - matches_found) * 10))
+		total_attempts = user.total_attempts
 		total_points = user.total_points + points
 		user.total_points = total_points
-		user.points_per_guess = total_points / total_guesses
+		user.points_per_guess = total_points / total_attempts
 		print ''
-		print 'This is the total_guesses: %s' % total_guesses
+		print 'This is the total_attempts: %s' % total_attempts
 		print 'This is the total_points: %s' % total_points
 		print ''
 
