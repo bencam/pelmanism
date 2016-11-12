@@ -149,12 +149,13 @@ class PelmanismApi(remote.Service):
 	@endpoints.method(
 		request_message=MAKE_MOVE_REQUEST,
 		response_message=GameForm,
-		path='game/move/{urlsafe_game_key}',
+		path='game/{urlsafe_game_key}',
 		name='make_move',
 		http_method='PUT')
 	def make_move(self, request):
-		"""Take a turn (this consists of two moves);
-		return a game state with message"""
+		"""Take a turn (or make an attempt); this consists of two moves;
+		at the conclusion of the turn or attempt, return a game state
+		with message"""
 		# Set up variables for making the first and second moves
 		game = get_by_urlsafe(request.urlsafe_game_key, Game)
 		user = User.query(game.user == User.key).get()
@@ -273,7 +274,7 @@ class PelmanismApi(remote.Service):
 		name='get_scores',
 		http_method='GET')
 	def get_scores(self, request):
-		"""Return all scores sorted by points"""
+		"""Return all scores ordered by points"""
 		return ScoreForms(
 			items=[score.to_form() for score in Score.query(
 				).order(-Score.points)])
@@ -287,7 +288,7 @@ class PelmanismApi(remote.Service):
 		name='get_user_scores',
 		http_method='GET')
 	def get_user_scores(self, request):
-		"""Return all of an individual user's scores sorted by points"""
+		"""Return all of an individual user's scores ordered by points"""
 		user = User.query(User.name == request.user_name).get()
 		if not user:
 			raise endpoints.NotFoundException(
@@ -303,7 +304,8 @@ class PelmanismApi(remote.Service):
 		name='get_average_attempts_remaining',
 		http_method='GET')
 	def get_average_attempts(self, request):
-		"""Return the cached average attempts remaining"""
+		"""Return the cached average attempts remaining for all
+		active games"""
 		return StringMessage(message=memcache.get(
 			MEMCACHE_MOVES_REMAINING) or '')
 
@@ -328,7 +330,7 @@ class PelmanismApi(remote.Service):
 		name='get_user_games',
 		http_method='GET')
 	def get_user_games(self, request):
-		"""Return a user's active games sorted by the time each game
+		"""Return a user's active games ordered by the time each game
 		was created"""
 		user = User.query(User.name == request.user_name).get()
 		if not user:
@@ -381,7 +383,7 @@ class PelmanismApi(remote.Service):
 		name='get_high_scores',
 		http_method='GET')
 	def get_high_scores(self, request):
-		"""Return all scores sorted by points; an optional parameter
+		"""Return all scores ordered by points; an optional parameter
 		(number_of_results) limits the number of results returned"""
 		num = request.number_of_results
 		if num:
