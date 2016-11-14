@@ -5,9 +5,11 @@ Pelmanism is a matching game API built on Google App Engine and written in Pytho
 
 ## Details and game description
 
-Also known as memory or concentration, Pelmanism is a simple one-player card-matching game. Each game begins with a randomly-sorted, even-numbered deck of cards (note: by default, Pelmanism uses a deck of 20 cards, but this can easily be adjusted). The cards are displayed face down and can be arranged in a grid or another type of pattern by a frontend developer. The player decides the maximum number of moves or attempts (the terms are used synonymously in this game) they will be allowed to take during the game.
+Also known as memory or concentration, Pelmanism is a simple one-player card-matching game. Each game begins with a randomly-sorted, even-numbered deck of cards. The cards are displayed face down and can be arranged in a grid or another type of pattern by a front-end developer. The player decides the maximum number of moves or attempts (the terms are used synonymously in this game) they will be allowed to take during the game.
 
 Each move consists of 'turning face up' or 'flipping over' two cards; each card 'turned over' is considered a guess. If the cards match, they are removed from the playing deck. If the cards do not match, they remain in the playing deck and are 'turned back over'. The player continues to make moves until either all of the pairs have been matched or the player runs out of attempts.
+
+By default, Pelmanism uses a deck of 20 cards, but this can be adjusted (see the section below titled 'Adjusting the game').
 
 Many users can play Pelmanism games at the same time, and each game can be played or retrieved by using the `urlsafe_game_key` path parameter.
 
@@ -20,12 +22,22 @@ The `get_game_history` endpoint provides a user with a summary of each move take
 More details about the game Pelmanism--and variations of it--can be found [here](https://en.wikipedia.org/wiki/Concentration_(game)).
 
 
+## Adjusting the game
+In Pelmanism the 'face' of each card is, by default, simply a string variable set to a capital letter of the Roman alphabet (e.g. `'C'` and `'C'` are a match). This can be changed by adjusting the card variables in the `deck_creation()` function in game_logic.py.
+
+A string variable set to `'_'` represents a card as being 'facedown'. This can be adjusted by changing the `disp_deck` variable in the `new_game` endpoint in pelmanism_api.py.
+
+A string variable set to `'X'` indicates that there is no card in that particular spot on the board (i.e. that card has been matched with another and has, therefore, been removed). To change the `'X'` value, alter the `disp_deck[x]` variable in the `reset_deck()` function in game_logic.py.
+
+By default, Pelmanism uses a deck of 20 cards, but this can be adjusted by altering several lines in game_logic.py. First, add more 'cards' to the `cards` variable in `deck_creation()`. Make sure each 'card' has a match. Next, change the number in the while loop (line 58) to reflect the updated total number of cards in the deck. Set the value of `deck_check` in the `guess_error()` function to the same number. Next, adjust the value of `game.matches_found` in the `won_or_lost()` function to half of the total cards in the deck. Do the same to the value of `game.matches_found` in the `points()` function.
+
+
 ## Install and set-up instructions
 1. Install Pelmanism by cloning the Pelmanism repository on GitHub: `$ git clone https://github.com/bencam/pelmanism.git`
 
 1. Create a new project on the [Google API Console](console.developers.google.com). Add the app ID of the new project to the application value in app.yaml (line 1). This app ID will be used to host your instance of the API.
 
-1. Run the app locally with the `dev_appserver.py [DIRECTORY_NAME_OF_PROJECT]` command. Make sure the app is running by visiting Google's API Explor (the default address is localhost:8080/_ah/api/explorer).
+1. Run the app locally with the `dev_appserver.py [DIRECTORY_NAME_OF_PROJECT]` command. Make sure the app is running by visiting Google's API Explorer (the default address is localhost:8080/_ah/api/explorer).
 
 1. Deploy the app to Google App Engine. Do this by running the the following command: `appcfg.py update [DIRECTORY_NAME_OF_PROJECT]`. Test the deployment of the app by visiting [APP_ID].appspot.com/_ah/api/explorer.
 
@@ -69,9 +81,7 @@ More details about the game Pelmanism--and variations of it--can be found [here]
   - Method: PUT
  	- Parameters: urlsafe_game_key, guess
  	- Returns: GameForm with updated game information
- 	- Description: Make a move (or an attempt); this consists of two guesses;
-    at the conclusion of the move or attempt, return a game state
-    with message
+ 	- Description: Make a move (or an attempt); this consists of two guesses; at the conclusion of the move or attempt, return a game state with message
 
  - **get_scores**
   - Path: 'scores'
@@ -113,25 +123,21 @@ More details about the game Pelmanism--and variations of it--can be found [here]
  	- Method: GET
  	- Parameters: number_of_results (optional)
  	- Returns: ScoreForms
- 	- Description: Returns all scores sorted by points; an optional parameter
-    (number_of_results) limits the number of results returned
+ 	- Description: Returns all scores sorted by points; an optional parameter (number_of_results) limits the number of results returned
 
  - **get_user_rankings**
   - Path: 'user_rankings'
  	- Method: GET
  	- Parameters: None
  	- Returns: UserRankings
- 	- Description: Returns a list of users ranked by points_per_guess
-    (points_per_guess is determined by total_points / total_attempts);
-    a tie is broken by total_points
+ 	- Description: Returns a list of users ranked by points_per_guess (points_per_guess is determined by total_points / total_attempts); a tie is broken by total_points
 
  - **get_game_history**
   - Path: 'game_history'
  	- Method: GET
  	- Parameters: urlsafe_game_key
  	- Returns: GameHistory
- 	- Description: Return a list of guesses made throughout the course of
-    a completed game as well as the end result of the game; raises a NotFoundException if the urlsafe_game_key does not match a corresponding game in the database; a message will indicate if the game is still active or was cancelled
+ 	- Description: Return a list of guesses made throughout the course of a completed game as well as the end result of the game; raises a NotFoundException if the urlsafe_game_key does not match a corresponding game in the database; a message will indicate if the game is still active or was cancelled
 
 
 ## Models included
