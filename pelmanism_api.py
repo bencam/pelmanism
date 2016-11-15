@@ -62,32 +62,29 @@ class PelmanismApi(remote.Service):
 
 # Define the endpoints
 	# CREATE USER endpoint ---
-	@endpoints.method(
-		request_message=USER_REQUEST,
-		response_message=StringMessage,
-		path='user',
-		name='create_user',
-		http_method='POST')
+	@endpoints.method(request_message=USER_REQUEST,
+					  response_message=StringMessage,
+					  path='user',
+					  name='create_user',
+					  http_method='POST')
 	def create_user(self, request):
 		"""Create a user; a unique username is required"""
 		if User.query(User.name == request.user_name).get():
 			raise endpoints.ConflictException(
 				'A user with that name already exists.')
 		user = User(name=request.user_name, email=request.email,
-			games_played=0, total_attempts=0, total_points=0,
-			points_per_guess=0)
+					games_played=0, total_attempts=0, total_points=0,
+					points_per_guess=0)
 		user.put()
 		return StringMessage(message='User {} created!'.format(
 			request.user_name))
 
-
 	# NEW GAME endpoint ---
-	@endpoints.method(
-		request_message=NEW_GAME_REQUEST,
-		response_message=GameForm,
-		path='game',
-		name='new_game',
-		http_method='POST')
+	@endpoints.method(request_message=NEW_GAME_REQUEST,
+					  response_message=GameForm,
+					  path='game',
+					  name='new_game',
+					  http_method='POST')
 	def new_game(self, request):
 		"""Create a new game"""
 		user = User.query(User.name == request.user_name).get()
@@ -107,9 +104,16 @@ class PelmanismApi(remote.Service):
 
 		# Attempt to create a new game object
 		try:
-			game = Game.new_game(user.key, request.attempts,
-				deck, disp_deck, attempts_made, match_list,
-				match_list_int, matches_found, guess1_or_guess2,
+			game = Game.new_game(
+				user.key,
+				request.attempts,
+				deck,
+				disp_deck,
+				attempts_made,
+				match_list,
+				match_list_int,
+				matches_found,
+				guess1_or_guess2,
 				guess_history)
 		except ValueError:
 			raise endpoints.BadRequestException(
@@ -122,14 +126,12 @@ class PelmanismApi(remote.Service):
 		# We pass in what will be the message as the argument
 		return game.to_form('Good luck playing Pelmanism!')
 
-
 	# GET GAME endpoint ---
-	@endpoints.method(
-		request_message=GET_GAME_REQUEST,
-		response_message=GameForm,
-		path='game/{urlsafe_game_key}',
-		name='get_game',
-		http_method='GET')
+	@endpoints.method(request_message=GET_GAME_REQUEST,
+					  response_message=GameForm,
+					  path='game/{urlsafe_game_key}',
+					  name='get_game',
+					  http_method='GET')
 	def get_game(self, request):
 		"""Return the current state of an active game"""
 		# Check to see if the urlsafe_game_key matches a game
@@ -144,14 +146,12 @@ class PelmanismApi(remote.Service):
 		else:
 			raise endpoints.NotFoundException('Game not found!')
 
-
 	# MAKE MOVE endpoint ---
-	@endpoints.method(
-		request_message=MAKE_MOVE_REQUEST,
-		response_message=GameForm,
-		path='game/{urlsafe_game_key}',
-		name='make_move',
-		http_method='PUT')
+	@endpoints.method(request_message=MAKE_MOVE_REQUEST,
+					  response_message=GameForm,
+					  path='game/{urlsafe_game_key}',
+					  name='make_move',
+					  http_method='PUT')
 	def make_move(self, request):
 		"""Make a move (or an attempt); this consists of two guesses;
 		at the conclusion of the move or attempt, return a game state
@@ -175,7 +175,7 @@ class PelmanismApi(remote.Service):
 			# (This ensures only the most recent guess1 is in the
 			# database thus simplifying the second guess)
 			guess1_old = Guess1.query().get()
-			if guess1_old != None:
+			if guess1_old is not None:
 				guess1_old.key.delete()
 
 			# Set up a variable for the integer representing the card
@@ -203,6 +203,7 @@ class PelmanismApi(remote.Service):
 			# Add the guess into the database
 			guess1_db = Guess1(guess1=guess1, guess1_int=guess1_int)
 			guess1_db.put()
+			print '\nThis is guess1_db: %s' % guess1_db + '\n'  # TESTING
 
 			game.guess1_or_guess2 += 1
 			game.put()
@@ -225,7 +226,7 @@ class PelmanismApi(remote.Service):
 			game.attempts_made += 1
 			game.guess1_or_guess2 += 1
 			user.total_attempts += 1
-			
+
 			# Convert guess2_int into a string variable containing
 			# the actual card value (i.e. a letter, rather than a num)
 			guess2 = deck[guess2_int]
@@ -253,7 +254,7 @@ class PelmanismApi(remote.Service):
 
 			# Determine if the game is over
 			won_lost_msg = game_logic.won_or_lost(game, user,
-				guess1.guess1, guess2)
+												  guess1.guess1, guess2)
 			# If the game is over, add up the points scored
 			game_logic.points(
 				game, game.attempts_made, game.matches_found, user)
@@ -266,27 +267,23 @@ class PelmanismApi(remote.Service):
 			print ''
 			return game.to_form(msg + match_msg + won_lost_msg)
 
-
 	# GET SCORES endpoint ---
-	@endpoints.method(
-		response_message=ScoreForms,
-		path='scores',
-		name='get_scores',
-		http_method='GET')
+	@endpoints.method(response_message=ScoreForms,
+					  path='scores',
+					  name='get_scores',
+					  http_method='GET')
 	def get_scores(self, request):
-		"""Return all scores ordered by points"""
+		"""Return all scores ordered by time_completed"""
 		return ScoreForms(
 			items=[score.to_form() for score in Score.query(
-				).order(-Score.points)])
-
+			).order(-Score.time_completed)])
 
 	# GET USER SCORES endpoint ---
-	@endpoints.method(
-		request_message=USER_REQUEST,
-		response_message=ScoreForms,
-		path='scores/user/{user_name}',
-		name='get_user_scores',
-		http_method='GET')
+	@endpoints.method(request_message=USER_REQUEST,
+					  response_message=ScoreForms,
+					  path='scores/user/{user_name}',
+					  name='get_user_scores',
+					  http_method='GET')
 	def get_user_scores(self, request):
 		"""Return all of an individual user's scores ordered by points"""
 		user = User.query(User.name == request.user_name).get()
@@ -296,13 +293,11 @@ class PelmanismApi(remote.Service):
 		scores = Score.query(Score.user == user.key).order(-Score.points)
 		return ScoreForms(items=[score.to_form() for score in scores])
 
-
 	# GET AVERAGE ATTEMPTS endpoint ---
-	@endpoints.method(
-		response_message=StringMessage,
-		path='games/average_attempts',
-		name='get_average_attempts_remaining',
-		http_method='GET')
+	@endpoints.method(response_message=StringMessage,
+					  path='games/average_attempts',
+					  name='get_average_attempts_remaining',
+					  http_method='GET')
 	def get_average_attempts(self, request):
 		"""Return the cached average attempts (or moves) remaining
 		for all active games"""
@@ -317,19 +312,18 @@ class PelmanismApi(remote.Service):
 		if games:
 			count = len(games)
 			total_attempts_remaining = sum([game.attempts_remaining
-				for game in games])
-			average = float(total_attempts_remaining)/count
-			memcache.set(MEMCACHE_MOVES_REMAINING,
+											for game in games])
+			average = float(total_attempts_remaining) / count
+			memcache.set(
+				MEMCACHE_MOVES_REMAINING,
 				'The average moves remaining is {:.2f}'.format(average))
 
-
 	# GET USER GAMES endpoint ---
-	@endpoints.method(
-		request_message=USER_REQUEST,
-		response_message=GameForms,
-		path='game/user/{user_name}',
-		name='get_user_games',
-		http_method='GET')
+	@endpoints.method(request_message=USER_REQUEST,
+					  response_message=GameForms,
+					  path='game/user/{user_name}',
+					  name='get_user_games',
+					  http_method='GET')
 	def get_user_games(self, request):
 		"""Return a user's active games ordered by the time each game
 		was created"""
@@ -344,20 +338,18 @@ class PelmanismApi(remote.Service):
 		# Filter out completed and cancelled games; return what's left
 		game_lst = []
 		for g in games:
-			if g.game_over == False:
-				if g.cancelled == False:
+			if not g.game_over:
+				if not g.cancelled:
 					game_lst.append(g)
 		return GameForms(
 			items=[g.to_form_user_games() for g in game_lst])
 
-
 	# CANCEL GAME endpoint ---
-	@endpoints.method(
-		request_message=CANCEL_GAME,
-		response_message=GameForm,
-		path='game/{urlsafe_game_key}/user/{user_name}',
-		name='cancel_game',
-		http_method='PUT')
+	@endpoints.method(request_message=CANCEL_GAME,
+					  response_message=GameForm,
+					  path='game/{urlsafe_game_key}/user/{user_name}',
+					  name='cancel_game',
+					  http_method='PUT')
 	def cancel_game(self, request):
 		"""Cancel a game"""
 		user = User.query(User.name == request.user_name).get()
@@ -365,9 +357,9 @@ class PelmanismApi(remote.Service):
 			raise endpoints.NotFoundException(
 				'A user with that name does not exist!')
 		game = get_by_urlsafe(request.urlsafe_game_key, Game)
-		if game.game_over == True:
+		if game.game_over:
 			raise endpoints.BadRequestException(
-					'Sorry, you can\'t delete a completed game.')
+				'Sorry, you can\'t delete a completed game.')
 		if user.key != game.user:
 			raise endpoints.BadRequestException(
 				'Sorry, you\'re not authorized to cancel this game.')
@@ -375,14 +367,12 @@ class PelmanismApi(remote.Service):
 		game.put()
 		return game.to_form('Game cancelled')
 
-
 	# GET HIGH SCORES endpoint ---
-	@endpoints.method(
-		request_message=HIGH_SCORES,
-		response_message=ScoreForms,
-		path='high_scores',
-		name='get_high_scores',
-		http_method='GET')
+	@endpoints.method(request_message=HIGH_SCORES,
+					  response_message=ScoreForms,
+					  path='high_scores',
+					  name='get_high_scores',
+					  http_method='GET')
 	def get_high_scores(self, request):
 		"""Return all scores ordered by points; an optional parameter
 		(number_of_results) limits the number of results returned"""
@@ -394,13 +384,11 @@ class PelmanismApi(remote.Service):
 		return ScoreForms(
 			items=[score.to_form() for score in scores])
 
-
 	# GET USER RANKINGS endpoint ---
-	@endpoints.method(
-		response_message=UserRankings,
-		path='user_rankings',
-		name='get_user_rankings',
-		http_method='GET')
+	@endpoints.method(response_message=UserRankings,
+					  path='user_rankings',
+					  name='get_user_rankings',
+					  http_method='GET')
 	def get_user_rankings(self, request):
 		"""Return a list of users ranked by points_per_guess
 		(points_per_guess is determined by total_points / total_attempts);
@@ -410,14 +398,12 @@ class PelmanismApi(remote.Service):
 		return UserRankings(
 			items=[user.to_rankings_form() for user in u_rankings])
 
-
 	# GET GAME HISTORY endpoint ---
-	@endpoints.method(
-		request_message=GET_GAME_REQUEST,
-		response_message=GameHistory,
-		path='game_history',
-		name='get_game_history',
-		http_method='GET')
+	@endpoints.method(request_message=GET_GAME_REQUEST,
+					  response_message=GameHistory,
+					  path='game_history',
+					  name='get_game_history',
+					  http_method='GET')
 	def get_game_history(self, request):
 		"""Return a list of guesses made throughout the course of
 		a completed game as well as the end result of the game"""
