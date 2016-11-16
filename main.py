@@ -25,39 +25,41 @@ from models import User, Game
 
 
 class SendReminderEmail(webapp2.RequestHandler):
-	def get(self):
-		"""Send a reminder email to all users with at
-		least one active game; call the handler every
-		24 hours using a cron job"""
-		app_id = app_identity.get_application_id()
-		users = User.query(User.email != None)
-		msg = ('\n\nIt looks like you started a Pelmanism game, '
-			'but haven\'t finished. Come back and find some matches!')
-		for user in users:
-			games = Game.query(Game.user == user.key).fetch()
-			for g in games:
-				if g.game_over == False:
-					if g.cancelled == False:
-						subject = 'Where did you go?'
-						body = 'Hi, {}!'.format(user.name) + msg
-						# This will send test emails to all users
-						mail.send_mail(
-							'noreply@{}.appspotmail.com'.format(app_id),
-							user.email,
-							subject,
-							body)
-						break
+
+    def get(self):
+        """Send a reminder email to all users with at
+        least one active game; call the handler every
+        24 hours using a cron job"""
+        app_id = app_identity.get_application_id()
+        users = User.query(User.email is not None)
+        msg = ('\n\nIt looks like you started a Pelmanism game, '
+               'but haven\'t finished. Come back and find some matches!')
+        for user in users:
+            games = Game.query(Game.user == user.key).fetch()
+            for g in games:
+                if not g.game_over:
+                    if not g.cancelled:
+                        subject = 'Where did you go?'
+                        body = 'Hi, {}!'.format(user.name) + msg
+                        # This will send test emails to all users
+                        mail.send_mail(
+                            'noreply@{}.appspotmail.com'.format(app_id),
+                            user.email,
+                            subject,
+                            body)
+                        break
 
 
 class UpdateAverageMovesRemaining(webapp2.RequestHandler):
-	def post(self):
-		"""Update average moves remaining"""
-		PelmanismApi._cache_average_attempts()
-		self.response.set_status(204)
+
+    def post(self):
+        """Update average moves remaining"""
+        PelmanismApi._cache_average_attempts()
+        self.response.set_status(204)
 
 
 # Register routes that point to the handlers defined above
 app = webapp2.WSGIApplication([
-	('/crons/send_reminder', SendReminderEmail),
-	('/tasks/cache_average_attempts', UpdateAverageMovesRemaining),
+    ('/crons/send_reminder', SendReminderEmail),
+    ('/tasks/cache_average_attempts', UpdateAverageMovesRemaining),
 ], debug=True)
