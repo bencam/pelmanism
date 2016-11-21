@@ -88,7 +88,7 @@ By default, Pelmanism uses a deck of 20 cards, but this can be adjusted by alter
  	- Method: GET
  	- Parameters: None
  	- Returns: ScoreForms
- 	- Description: Returns all scores (ordered by points)
+ 	- Description: Returns all scores (ordered by time_completed)
 
  - **get_user_scores**
   	- Path: 'scores/user/{user_name}'
