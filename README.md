@@ -3,11 +3,30 @@
 Pelmanism is a matching game API built on Google App Engine and written in Python.
 
 
-## Details and game description
+## General game description
 
-Also known as memory or concentration, Pelmanism is a simple one-player card-matching game. Each game begins with a randomly-sorted, even-numbered deck of cards. The cards are displayed face down and can be arranged in a grid or another type of pattern by a front-end developer. The player decides the maximum number of moves or attempts (the terms are used synonymously in this game) they will be allowed to take during the game.
+Also known as memory or concentration, Pelmanism is a simple one-player card-matching game. Each game begins with a randomly-sorted, even-numbered deck of cards. The cards are displayed face down and can be arranged in a grid or another type of pattern by a front-end developer. The player decides the maximum number of moves or attempts (the terms are used synonymously in this game) they will be allowed to take during the course of the game.
 
 Each move consists of 'turning face up' or 'flipping over' two cards; each card 'turned over' is considered a guess. If the cards match, they are removed from the playing deck. If the cards do not match, they remain in the playing deck and are 'turned back over'. The player continues to make moves until either all of the pairs have been matched or the player runs out of attempts.
+
+
+## Install and set-up instructions
+1. Install Pelmanism by cloning the Pelmanism repository on GitHub: `$ git clone https://github.com/bencam/pelmanism.git`
+
+1. Create a new project on the [Google API Console](console.developers.google.com). Add the app ID of the new project to the application value in app.yaml (line 1). This app ID will be used to host your instance of the API.
+
+1. Run the app locally with the `dev_appserver.py [DIRECTORY_NAME_OF_PROJECT]` command. Make sure the app is running by visiting Google's API Explorer (the default address is localhost:8080/_ah/api/explorer).
+
+1. Deploy the app to Google App Engine. Do this by running the the following command: `appcfg.py update [DIRECTORY_NAME_OF_PROJECT]`. Test the deployment of the app by visiting [APP_ID].appspot.com/_ah/api/explorer.
+
+
+## Game details
+
+To play this version of Pelmanism, users first create a user by calling the `create_user` endpoint and entering in their name and (optionally) their email address. A user then calls the `new_game` endpoint and inputs their user name as well as the number of allowed attempts they would like for the game (by default, a user must choose between 30 and 60 attempts). The `new_game` endpoint will then return a game state, which includes a `urlsafe_game_key`.
+
+A user then calls the `make_move` endpoint, pasting the `urlsafe_game_key` into the form and choosing a card to 'flip over' by entering a number between 0 and 19 in the 'guess' field (this constitutes the first guess of the move). The `make_move` endpoint will then return the game state, including information about which card the user turned over. In order to complete the move or attempt, the user calls the `make_move` endpoint a second time (the second guess of the move). The `urlsafe_game_key` field will remain populated with the correct key, so the user will only need to choose another card to 'flip over' by again inputing a number between 0 and 19 in the 'guess' field. A game state will be returned and include information on whether a match was found.
+
+This process of calling the `make_move` endpoint twice for each move continues until the user either finds all of the matches in the deck or runs out of attempts (again, 'attempts' and 'moves' are used synonymously in this API). Details on how 'cards' are displayed during the game play can be found in the 'Adjusting the game' section below.
 
 By default, Pelmanism uses a deck of 20 cards, but this can be adjusted (see the section below titled 'Adjusting the game').
 
@@ -15,7 +34,7 @@ Many users can play Pelmanism games at the same time, and each game can be playe
 
 Points are awarded at the end of each game. The following formula is used to determine how many points are awarded: `points = (500 - ((attempts_made - matches_found) * 10))`. Users can view points earned by themselves and other users with the `get_scores`, `get_user_scores`, and `get_high_scores` endpoints.
 
-Each user profile includes `games_played`, `total_attempts`, `total_points`, and `points_per_guess` properties. These are updated at the conclusion of each game played. The `points_per_guess` property is determined with the following formula: `points_per_guess = total_points / total_attempts`. Users can see how the rank against other users with the `get_user_rankings` endpoint. Users are ranked by the `points_per_guess` property; in the event of a tie, users are ranked according to the `total_points` property.
+Each user profile includes `games_played`, `total_attempts`, `total_points`, and `points_per_guess` properties. These are updated at the conclusion of each game played. The `points_per_guess` property is determined with the following formula: `points_per_guess = total_points / total_attempts`. Users can see how they rank against other users with the `get_user_rankings` endpoint. Users are ranked by the `points_per_guess` property; in the event of a tie, users are ranked according to the `total_points` property.
 
 The `get_game_history` endpoint provides a user with a summary of each move taken during the course of a completed game. The endpoint also indicates how the game ended (i.e. did the player win or lose?).
 
@@ -32,22 +51,11 @@ A string variable set to `'X'` indicates that there is no card in that particula
 By default, Pelmanism uses a deck of 20 cards, but this can be adjusted by altering several lines in game_logic.py. First, add more 'cards' to the `cards` variable in `deck_creation()`. Make sure each 'card' has a match. Next, change the number in the while loop (line 58) to reflect the updated total number of cards in the deck. Set the value of `deck_check` in the `guess_error()` function to the same number. Next, adjust the value of `game.matches_found` in the `won_or_lost()` function to half of the total cards in the deck. Do the same to the value of `game.matches_found` in the `points()` function.
 
 
-## Install and set-up instructions
-1. Install Pelmanism by cloning the Pelmanism repository on GitHub: `$ git clone https://github.com/bencam/pelmanism.git`
-
-1. Create a new project on the [Google API Console](console.developers.google.com). Add the app ID of the new project to the application value in app.yaml (line 1). This app ID will be used to host your instance of the API.
-
-1. Run the app locally with the `dev_appserver.py [DIRECTORY_NAME_OF_PROJECT]` command. Make sure the app is running by visiting Google's API Explorer (the default address is localhost:8080/_ah/api/explorer).
-
-1. Deploy the app to Google App Engine. Do this by running the the following command: `appcfg.py update [DIRECTORY_NAME_OF_PROJECT]`. Test the deployment of the app by visiting [APP_ID].appspot.com/_ah/api/explorer.
-
-
-
 ## Files included
  - pelmanism_api.py: contains endpoints and part of the game-playing logic
  - models.py: defines entities and messages; contains helper methods
  - game_logic.py: contains five functions needed for the game play
- - main.py: contains handlers for taskqueue and cronjob
+ - main.py: contains handlers for the taskqueue and cronjob
  - utils.py: contains a helper function for retrieving game information
  - app.yaml: app configuration
  - cron.yaml: crongjob configuration
@@ -60,14 +68,14 @@ By default, Pelmanism uses a deck of 20 cards, but this can be adjusted by alter
  	- Method: POST
  	- Parameters: user_name, email (optional)
  	- Returns: Message confirming creation of new User
- 	- Description: Creates a new user; the user_name must be unique; an exception will be raised is a user registers under a user_name that already exists
+ 	- Description: Creates a new user; the user_name must be unique; an exception will be raised if a user registers under a user_name that already exists
 
  - **new_game**
  	- Path: 'game'
  	- Method: POST
  	- Parameters: user_name, attempts
  	- Returns: GameForm with initial game information
- 	- Description: Creates a new game; the user_name sent in the request must correspond to an existing user; a NotFoundException will be raised otherwise; the number of attempts must be no more than 60 and no less than 30; a task is also added to the task queue to update the average attempts remaining for all active games
+ 	- Description: Creates a new game; the user_name sent in the request must correspond to an existing user; a NotFoundException will be raised otherwise; the number of attempts must be no more than 60 and no less than 30; a task is also added to the taskqueue to update the average attempts remaining for all active games
 
  - **get_game**
   - Path: 'game/{urlsafe_game_key}'
@@ -81,7 +89,7 @@ By default, Pelmanism uses a deck of 20 cards, but this can be adjusted by alter
   - Method: PUT
  	- Parameters: urlsafe_game_key, guess
  	- Returns: GameForm with updated game information
- 	- Description: Make a move (or an attempt); this consists of two guesses; at the conclusion of the move or attempt, return a game state with message
+ 	- Description: Make a move (or an attempt); this consists of two guesses, meaning that a user must call the make_move endpoint twice in order to make a move; at the conclusion of the move, return a game state with message
 
  - **get_scores**
   - Path: 'scores'
@@ -148,7 +156,8 @@ By default, Pelmanism uses a deck of 20 cards, but this can be adjusted by alter
  	- Stores unique game states; associated with User model through the KeyProperty
  
  - **Guess1**
- 	- Stores information regarding the first guess; this is compared with the second guess attributes in the make_move endpoint in pelmansim_api.py
+ 	- Guess1 object; each Guess1 model is given a parent (game.key) in pelmansim_api.py; the Guess1 model is compared with the guess2 and
+  guess2_int attributes in the make_move endpoint in pelmansim_api.py
  
  - **Score**
  	- Stores information regarding completed games; associated with Users model through the KeyProperty
