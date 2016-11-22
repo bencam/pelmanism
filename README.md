@@ -13,7 +13,7 @@ Each move consists of 'turning face up' or 'flipping over' two cards; each card 
 ## Install and set-up instructions
 1. Install Pelmanism by cloning the Pelmanism repository on GitHub: `$ git clone https://github.com/bencam/pelmanism.git`
 
-1. Create a new project on the [Google API Console](console.developers.google.com). Add the app ID of the new project to the application value in app.yaml (line 1). This app ID will be used to host your instance of the API.
+1. Create a new project on the [Google API Console](https://console.developers.google.com/). Add the app ID of the new project to the application value in app.yaml (line 1). This app ID will be used to host your instance of the API.
 
 1. Run the app locally with the `dev_appserver.py [DIRECTORY_NAME_OF_PROJECT]` command. Make sure the app is running by visiting Google's API Explorer (the default address is localhost:8080/_ah/api/explorer).
 
