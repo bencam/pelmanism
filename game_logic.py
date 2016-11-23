@@ -14,7 +14,7 @@ The game_logic.py file contains five functions needed to play Pelmanism:
 	or lost; returns a variable (won_lost_msg) that is used in
 	pelmanism_api.py to notify the user that the game is over
 5. points() determines (if the game is over) how many points and
-	points_per_guess the player earned
+	points_per_attempt the player earned
 
 """
 
@@ -113,13 +113,13 @@ def won_or_lost(game, user, guess1, guess2):
 
 def points(game, attempts_made, matches_found, user):
     """(If the game is over) determine how many points and
-    points_per_guess the player earned"""
+    points_per_attempt the player earned"""
     if game.matches_found == 10 or game.attempts_remaining < 1:
         points = (500 - ((attempts_made - matches_found) * 10))
         total_attempts = user.total_attempts
         total_points = user.total_points + points
         user.total_points = total_points
-        user.points_per_guess = total_points / total_attempts
+        user.points_per_attempt = total_points / total_attempts
 
 
 # SOURCES
