@@ -27,11 +27,10 @@ from models import User, Game
 class SendReminderEmail(webapp2.RequestHandler):
 
     def get(self):
-        """Send a reminder email to all users with at
-        least one active game; call the handler every
-        24 hours using a cron job"""
+        """Send a reminder email to all users with at least one active game;
+        call the handler every 24 hours using a cron job"""
         app_id = app_identity.get_application_id()
-        users = User.query(User.email is not None)
+        users = User.query(User.email != None)
         msg = ('\n\nIt looks like you started a Pelmanism game, '
                'but haven\'t finished. Come back and find some matches!')
         for user in users:
