@@ -34,9 +34,11 @@ Many users can play Pelmanism games at the same time, and each game can be playe
 
 Points are awarded at the end of each game. The following formula is used to determine how many points are awarded: `points = (500 - ((attempts_made - matches_found) * 10))`. Users can view points earned by themselves and other users with the `get_scores`, `get_user_scores`, and `get_high_scores` endpoints.
 
-Each user profile includes `games_played`, `total_attempts`, `total_points`, and `points_per_guess` properties. These are updated at the conclusion of each game played. The `points_per_guess` property is determined with the following formula: `points_per_guess = total_points / total_attempts`. Users can see how they rank against other users with the `get_user_rankings` endpoint. Users are ranked by the `points_per_guess` property; in the event of a tie, users are ranked according to the `total_points` property.
+Each user profile includes `games_played`, `total_attempts`, `total_points`, and `points_per_attempt` properties. These are updated at the conclusion of each game played. The `points_per_attempt` property is determined with the following formula: `points_per_attempt = total_points / total_attempts`. Users can see how they rank against other users with the `get_user_rankings` endpoint. Users are ranked by the `points_per_attempt` property; in the event of a tie, users are ranked according to the `total_points` property.
 
 The `get_game_history` endpoint provides a user with a summary of each move taken during the course of a completed game. The endpoint also indicates how the game ended (i.e. did the player win or lose?).
+
+Pelmanism also uses a cronjob to notify users. The cronjob sends a reminder email every 24 hours to only those users who have at least one uncompleted game.
 
 More details about the game Pelmanism--and variations of it--can be found [here](https://en.wikipedia.org/wiki/Concentration_(game)).
 
@@ -138,7 +140,7 @@ By default, Pelmanism uses a deck of 20 cards, but this can be adjusted by alter
  	- Method: GET
  	- Parameters: None
  	- Returns: UserRankings
- 	- Description: Returns a list of users ranked by points_per_guess (points_per_guess is determined by total_points / total_attempts); a tie is broken by total_points
+ 	- Description: Returns a list of users ranked by points_per_attempt (points_per_attempt is determined by total_points / total_attempts); a tie is broken by total_points
 
  - **get_game_history**
   - Path: 'game_history'
@@ -186,7 +188,7 @@ By default, Pelmanism uses a deck of 20 cards, but this can be adjusted by alter
  	- Outbound container for a list of ScoreForm forms
 
  - **UserRanking**
- 	- Used for outbound messages regarding user rankings (user_name, games_played, total_attempts, total_points, points_per_guess)
+ 	- Used for outbound messages regarding user rankings (user_name, games_played, total_attempts, total_points, points_per_attempt)
 
  - **UserRankings**
  	- Outbound container for a list of UserRanking forms

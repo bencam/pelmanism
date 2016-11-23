@@ -10,9 +10,9 @@ For the User model, I added four properties:
  - games_played
  - total_attempts
  - total_points
- - points_per_guess
+ - points_per_attempt
 
-All four are non-repeating integer properties. I added games_played so that a user could view the number of games they have played through the get_user_rankings endpoint. I added total_attempts, total_points, and points_per_guess in order to rank each user. (Users are ranked by points_per_guess which is derived by dividing total_points by total_attempts.)
+All four are non-repeating integer properties. I added games_played so that a user could view the number of games they have played through the get_user_rankings endpoint. I added total_attempts, total_points, and points_per_attempt in order to rank each user. (Users are ranked by points_per_attempt which is derived by dividing total_points by total_attempts.)
 
 In the Game model I added 10 properties:
 
