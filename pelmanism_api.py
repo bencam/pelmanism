@@ -68,13 +68,13 @@ class PelmanismApi(remote.Service):
                       name='create_user',
                       http_method='POST')
     def create_user(self, request):
-        """Create a user; a unique username is required"""
+        """Create a user; a unique user name is required"""
         if User.query(User.name == request.user_name).get():
             raise endpoints.ConflictException(
                 'A user with that name already exists.')
         user = User(name=request.user_name, email=request.email,
                     games_played=0, total_attempts=0, total_points=0,
-                    points_per_guess=0)
+                    points_per_attempt=0)
         user.put()
         return StringMessage(message='User {} created!'.format(
             request.user_name))
@@ -117,7 +117,7 @@ class PelmanismApi(remote.Service):
                 guess_history)
         except ValueError:
             raise endpoints.BadRequestException(
-                'Number of attempts must be more than 30 and less than 61')
+                'Number of attempts must be more than 29 and less than 61')
 
         # Update the number of attempts remaining with a task queue
         taskqueue.add(url='/tasks/cache_average_attempts')
@@ -151,11 +151,12 @@ class PelmanismApi(remote.Service):
                       response_message=GameForm,
                       path='game/{urlsafe_game_key}',
                       name='make_move',
-                      http_method='PUT')
+                      http_method='POST')
     def make_move(self, request):
-        """Make a move (or an attempt); this consists of two guesses;
-        at the conclusion of the move or attempt, return a game state
-        with message"""
+        """Make a move (or an attempt); this consists of two guesses,
+        meaning that a user must call the make_move endpoint twice in
+        order to make a move; at the conclusion of the move,
+        return a game state with message"""
         # Set up variables for making the first and second guesses
         game = get_by_urlsafe(request.urlsafe_game_key, Game)
         user = User.query(game.user == User.key).get()
@@ -171,10 +172,10 @@ class PelmanismApi(remote.Service):
         # is flipping over their first or second card of the move
         if game.guess1_or_guess2 % 2 == 0:
 
-            # Query the Guess1 kind and delete previous entry
-            # (This ensures only the most recent guess1 is in the
-            # database thus simplifying the second guess)
-            guess1_old = Guess1.query().get()
+            # Retrieve the Guess1 model for this game and delete
+            # the previous entities (this ensures only the most recent
+            # guess1 is in the database, thus simplifying the second guess)
+            guess1_old = Guess1.query(ancestor=game.key).get()
             if guess1_old is not None:
                 guess1_old.key.delete()
 
@@ -200,8 +201,10 @@ class PelmanismApi(remote.Service):
             # Display the deck with the chosen card flipped over
             game.disp_deck[guess1_int] = guess1
 
-            # Add the guess into the database
-            guess1_db = Guess1(guess1=guess1, guess1_int=guess1_int)
+            # Add the guess into the database, making game.key the parent
+            guess1_db = Guess1(parent=game.key,
+                               guess1=guess1,
+                               guess1_int=guess1_int)
             guess1_db.put()
 
             game.guess1_or_guess2 += 1
@@ -211,8 +214,9 @@ class PelmanismApi(remote.Service):
 
         # SECOND GUESS
         else:
-            # Retrieve guess1 from the database to check for a match
-            guess1 = Guess1.query().get()
+            # Retrieve the guess1 model that matches this game
+            # (this is done to check for a match later)
+            guess1 = Guess1.query(ancestor=game.key).get()
 
             # Set up a variable for the integer representing the card
             guess2_int = request.guess
@@ -343,7 +347,7 @@ class PelmanismApi(remote.Service):
                       response_message=GameForm,
                       path='game/{urlsafe_game_key}/user/{user_name}',
                       name='cancel_game',
-                      http_method='PUT')
+                      http_method='POST')
     def cancel_game(self, request):
         """Cancel a game"""
         user = User.query(User.name == request.user_name).get()
@@ -384,11 +388,11 @@ class PelmanismApi(remote.Service):
                       name='get_user_rankings',
                       http_method='GET')
     def get_user_rankings(self, request):
-        """Return a list of users ranked by points_per_guess
-        (points_per_guess is determined by total_points / total_attempts);
+        """Return a list of users ranked by points_per_attempt
+        (points_per_attempt is determined by total_points / total_attempts);
         a tie is broken by total_points"""
         u_rankings = User.query().order(
-            -User.points_per_guess, -User.total_points).fetch()
+            -User.points_per_attempt, -User.total_points).fetch()
         return UserRankings(
             items=[user.to_rankings_form() for user in u_rankings])
 
@@ -425,7 +429,15 @@ api = endpoints.api_server([PelmanismApi])
 # Pelmanism is based off of a game API (called 'Guess a Number') developed
 # by Udacity on Google App Engine. While this project is both different
 # from and more complicated than Guess a Number, the Guess a Number
-# scripts were used as a baseline for Pelmanism.
+# scripts were used as a baseline for Pelmanism. The get_by_urlsafe()
+# function in the utils.py file remains unchanged.
+
+# Forum mentor swooding helped me figure out an intermittent error I was
+# encountering (occasionally GAE would not be able to retrieve the Guess1
+# entities). The solution was to give each Guess1 model a parent (game.key)
+# and retrieve the models from the Datastore with ancestor queries. See
+# https://discussions.udacity.com/t/intermittent-attributeerror-google-
+# app-engine/198590
 
 # A post by forum mentor abhishek_ghosh helped me figure out a querying
 # problem I was having with the get user games endpoint; see https://
