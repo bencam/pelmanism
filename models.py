@@ -27,7 +27,7 @@ class User(ndb.Model):
     games_played = ndb.IntegerProperty(required=True)
     total_attempts = ndb.IntegerProperty(required=True)
     total_points = ndb.IntegerProperty(required=True)
-    points_per_guess = ndb.IntegerProperty(required=True)
+    points_per_attempt = ndb.IntegerProperty(required=True)
 
     def to_rankings_form(self):
         """Return a UserRanking representation of the User"""
@@ -36,7 +36,7 @@ class User(ndb.Model):
             games_played=self.games_played,
             total_attempts=self.total_attempts,
             total_points=self.total_points,
-            points_per_guess=self.points_per_guess)
+            points_per_attempt=self.points_per_attempt)
 
 
 class Game(ndb.Model):
@@ -63,7 +63,7 @@ class Game(ndb.Model):
         """Create and return a new game"""
         if attempts < 30 or attempts > 60:
             raise ValueError(
-                'Number of attempts must be more than 30 and less than 61')
+                'Number of attempts must be more than 29 and less than 61')
         game = Game(
             user=user,
             deck=deck,
@@ -149,8 +149,9 @@ class Game(ndb.Model):
 
 
 class Guess1(ndb.Model):
-    """Guess1 object; this is compared with the guess2 and guess2_int
-    attributes in the make_move endpoint in pelmansim_api.py"""
+    """Guess1 object; each Guess1 model is given a parent (game.key) in
+    pelmansim_api.py; the Guess1 model is compared with the guess2 and
+    guess2_int attributes in the make_move endpoint in pelmansim_api.py"""
     guess1 = ndb.StringProperty(required=True)
     guess1_int = ndb.IntegerProperty(required=True)
 
@@ -241,12 +242,12 @@ class ScoreForms(messages.Message):
 
 class UserRanking(messages.Message):
     """Used for outbound information regarding user rankings (players are
-    ranked by points_per_guess; total_points is used to break a tie)"""
+    ranked by points_per_attempt; total_points is used to break a tie)"""
     user_name = messages.StringField(1, required=True)
     games_played = messages.IntegerField(2, required=True)
     total_attempts = messages.IntegerField(3, required=True)
     total_points = messages.IntegerField(4, required=True)
-    points_per_guess = messages.IntegerField(5, required=True)
+    points_per_attempt = messages.IntegerField(5, required=True)
 
 
 class UserRankings(messages.Message):
