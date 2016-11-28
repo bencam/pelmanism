@@ -150,56 +150,6 @@ By default, Pelmanism uses a deck of 20 cards, but this can be adjusted by alter
  	- Description: Return a list of guesses made throughout the course of a completed game as well as the end result of the game; raises a NotFoundException if the urlsafe_game_key does not match a corresponding game in the database; a message will indicate if the game is still active or was cancelled
 
 
-## Models included
- - **User**
- 	- Stores unique user_name and (optional) email address
-
- - **Game**
- 	- Stores unique game states; associated with User model through the KeyProperty
- 
- - **Guess1**
- 	- Guess1 object; each Guess1 model is given a parent (game.key) in pelmansim_api.py; the Guess1 model is compared with the guess2 and
-  guess2_int attributes in the make_move endpoint in pelmansim_api.py
- 
- - **Score**
- 	- Stores information regarding completed games; associated with Users model through the KeyProperty
-
-
-## Forms included
- - **GameForm**
- 	- Used for outbound information on a game (urlsafe_key, attempts_remaining, game_over, message, user_name, disp_deck, attempts_made, match_list, matches_found, cancelled, time_created)
-
- - **GameFormUserGame**
- 	- Used for outbound information on a user's active game (urlsafe_key, attempts_remaining, game_over, user_name, disp_deck, attempts_made, match_list, matches_found, time_created)
-
- - **GameForms**
- 	- Outbound container for a list of GameFormUserGame forms
-
- - **NewGameForm**
- 	- Inbound form used to create a new game (user_name, attempts)
-
- - **MakeMoveForm**
- 	- Inbound form used to make a move (guess)
-
- - **ScoreForm**
- 	- Used for outbound score information for finished games (user_name, time_completed, won, attempts_made, game_deck, matches_found, points)
-
- - **ScoreForms**
- 	- Outbound container for a list of ScoreForm forms
-
- - **UserRanking**
- 	- Used for outbound messages regarding user rankings (user_name, games_played, total_attempts, total_points, points_per_attempt)
-
- - **UserRankings**
- 	- Outbound container for a list of UserRanking forms
-
- - **GameHistory**
- 	- Used for outbound information on each guess made and the outcome of a game (user_name, guess_history, attempts_made, match_list, matches_found, deck, time_created, message)
-
- - **StringMessage**
- 	- General purpose string container for outbound messages
-
-
 ## License
 
 Pelmanism is released under the [MIT License](http://opensource.org/licenses/MIT).
