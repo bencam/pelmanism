@@ -35,18 +35,17 @@ class SendReminderEmail(webapp2.RequestHandler):
                'but haven\'t finished. Come back and find some matches!')
         for user in users:
             games = Game.query(Game.user == user.key).fetch()
-            for g in games:
-                if not g.game_over:
-                    if not g.cancelled:
-                        subject = 'Where did you go?'
-                        body = 'Hi, {}!'.format(user.name) + msg
-                        # This will send test emails to all users
-                        mail.send_mail(
-                            'noreply@{}.appspotmail.com'.format(app_id),
-                            user.email,
-                            subject,
-                            body)
-                        break
+            for game in games:
+                if not game.game_over and not game.cancelled:
+                    subject = 'Where did you go?'
+                    body = 'Hi, {}!'.format(user.name) + msg
+                    # This will send test emails to all users
+                    mail.send_mail(
+                        'noreply@{}.appspotmail.com'.format(app_id),
+                        user.email,
+                        subject,
+                        body)
+                    break
 
 
 class UpdateAverageMovesRemaining(webapp2.RequestHandler):
