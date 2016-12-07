@@ -22,13 +22,21 @@ import endpoints
 
 from protorpc import remote, messages
 
-from google.appengine.api import memcache
-from google.appengine.api import taskqueue
+from google.appengine.api import memcache, taskqueue
 from google.appengine.ext import ndb
 
-from models import User, Game, Guess1, Score
-from models import StringMessage, NewGameForm, GameForm, MakeMoveForm
-from models import ScoreForms, GameForms, UserRankings, GameHistory
+from models import (User,
+                    Game,
+                    Guess1,
+                    Score,
+                    StringMessage,
+                    NewGameForm,
+                    GameForm,
+                    MakeMoveForm,
+                    ScoreForms,
+                    GameForms,
+                    UserRankings,
+                    GameHistory)
 
 import game_logic
 
@@ -389,8 +397,8 @@ class PelmanismApi(remote.Service):
                       http_method='GET')
     def get_user_rankings(self, request):
         """Return a list of users ranked by points_per_attempt
-        (points_per_attempt is determined by total_points / total_attempts);
-        a tie is broken by total_points"""
+        (points_per_attempt is determined by total_points /
+        total_attempts); a tie is broken by total_points"""
         u_rankings = User.query().order(
             -User.points_per_attempt, -User.total_points).fetch()
         return UserRankings(
