@@ -137,3 +137,84 @@ class Game(ndb.Model):
             matches_found=self.matches_found,
             points=points)
         score.put()
+
+
+# Message definitions
+class GameForm(messages.Message):
+    """Used for outbound game information"""
+    urlsafe_key = messages.StringField(1, required=True)
+    attempts_remaining = messages.IntegerField(2, required=True)
+    game_over = messages.BooleanField(3, required=True)
+    message = messages.StringField(4, required=True)
+    user_name = messages.StringField(5, required=True)
+    disp_deck = messages.StringField(6, repeated=True)
+    attempts_made = messages.IntegerField(7, required=True)
+    match_list = messages.StringField(8, repeated=True)
+    matches_found = messages.IntegerField(9, required=True, default=0)
+    cancelled = messages.BooleanField(10, required=True)
+    time_created = messages.StringField(11, required=True)
+
+
+class GameFormUserGame(messages.Message):
+    """Used for outbound information on the state of a
+    user's active game"""
+    urlsafe_key = messages.StringField(1, required=True)
+    attempts_remaining = messages.IntegerField(2, required=True)
+    game_over = messages.BooleanField(3, required=True)
+    user_name = messages.StringField(4, required=True)
+    disp_deck = messages.StringField(5, repeated=True)
+    attempts_made = messages.IntegerField(6, required=True)
+    match_list = messages.StringField(7, repeated=True)
+    matches_found = messages.IntegerField(8, required=True)
+    time_created = messages.StringField(9, required=True)
+
+
+class GameForms(messages.Message):
+    """Outbound container for a list of GameFormUserGame forms"""
+    items = messages.MessageField(GameFormUserGame, 1, repeated=True)
+
+
+class NewGameForm(messages.Message):
+    """Inbound form used to create a new game"""
+    user_name = messages.StringField(1, required=True)
+    attempts = messages.IntegerField(2, required=True)
+
+
+class MakeMoveForm(messages.Message):
+    """Inbound form used to make a move"""
+    guess = messages.IntegerField(1, required=True)
+
+
+class ScoreForm(messages.Message):
+    """Used for outbound score information for finished games"""
+    user_name = messages.StringField(1, required=True)
+    time_completed = messages.StringField(2, required=True)
+    won = messages.BooleanField(3, required=True)
+    attempts_made = messages.IntegerField(4, required=True)
+    game_deck = messages.StringField(5, repeated=True)
+    matches_found = messages.IntegerField(6, required=True, default=0)
+    points = messages.IntegerField(7, required=True, default=0)
+
+
+class ScoreForms(messages.Message):
+    """Outbound container for a list of ScoreForm forms"""
+    items = messages.MessageField(ScoreForm, 1, repeated=True)
+
+
+class GameHistory(messages.Message):
+    """Used for outbound information on each guess made
+    and the outcome of a game"""
+    user_name = messages.StringField(1, required=True)
+    guess_history = messages.StringField(2, repeated=True)
+    attempts_made = messages.IntegerField(3, required=True)
+    match_list = messages.StringField(4, repeated=True)
+    matches_found = messages.IntegerField(5, required=True)
+    deck = messages.StringField(6, repeated=True)
+    time_created = messages.StringField(7, required=True)
+    message = messages.StringField(8)
+
+
+class StringMessage(messages.Message):
+    """A single outbound string message"""
+    message = messages.StringField(1, required=True)
+
