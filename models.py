@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+
 """
 The class definitions for the Google Datastore entities used by
 Pelmanism are defined in models.py. Helper methods are also included.
@@ -13,7 +14,6 @@ ScoreForms, UserRanking, UserRankings, GameHistory and StringMessage.
 """
 
 
-import random
 from datetime import datetime
 from protorpc import messages
 from google.appengine.ext import ndb
