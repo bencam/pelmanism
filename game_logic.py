@@ -120,18 +120,3 @@ def points(game, attempts_made, matches_found, user):
         total_points = user.total_points + points
         user.total_points = total_points
         user.points_per_attempt = total_points / total_attempts
-
-
-# SOURCES
-
-# SO user Peteris Caune helped me learn how to take a random
-# object from a list in python; see http://stackoverflow.com/questions/
-# 18265935/python-create-list-with-numbers-between-2-values
-
-# An SO post helped me create the deck_check list; see: http://
-# stackoverflow.com/questions/18265935/python-create-list-with-
-# numbers-between-2-values
-
-# A SO discussion helped me figure out how to display chosen cards;
-# see http://stackoverflow.com/questions/2582138/finding-and-
-# replacing-elements-in-a-list-python
