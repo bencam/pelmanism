@@ -11,6 +11,7 @@ Each move consists of 'turning face up' or 'flipping over' two cards; each card 
 
 
 ## Install and set-up instructions
+
 1. Install Pelmanism by cloning the Pelmanism repository on GitHub: `$ git clone https://github.com/bencam/pelmanism.git`
 
 1. Create a new project on the [Google API Console](https://console.developers.google.com/). Add the app ID of the new project to the application value in app.yaml (line 1). This app ID will be used to host your instance of the API.
@@ -44,6 +45,7 @@ More details about the game Pelmanism--and variations of it--can be found [here]
 
 
 ## Adjusting the game
+
 In Pelmanism the 'face' of each card is, by default, simply a string variable set to a capital letter of the Roman alphabet (e.g. `'C'` and `'C'` are a match). This can be changed by adjusting the card variables in the `deck_creation()` function in game_logic.py.
 
 A string variable set to `'_'` represents a card as being 'facedown'. This can be adjusted by changing the `disp_deck` variable in the `new_game` endpoint in pelmanism_api.py.
@@ -54,6 +56,7 @@ By default, Pelmanism uses a deck of 20 cards, but this can be adjusted by alter
 
 
 ## Files included
+
  - pelmanism_api.py: contains endpoints and part of the game-playing logic
  - models.py: defines entities and messages; contains helper methods
  - game_logic.py: contains five functions needed for the game play
@@ -65,6 +68,7 @@ By default, Pelmanism uses a deck of 20 cards, but this can be adjusted by alter
 
 
 ## Endpoints included
+
  - **create_user**
  	- Path: 'user'
  	- Method: POST
@@ -148,6 +152,45 @@ By default, Pelmanism uses a deck of 20 cards, but this can be adjusted by alter
  	- Parameters: urlsafe_game_key
  	- Returns: GameHistory
  	- Description: Return a list of guesses made throughout the course of a completed game as well as the end result of the game; raises a NotFoundException if the urlsafe_game_key does not match a corresponding game in the database; a message will indicate if the game is still active or was cancelled
+
+
+## Sources
+
+Pelmanism is based off of a game API (called 'Guess a Number') developed
+by Udacity on Google App Engine. While this project is both different
+from and more complicated than Guess a Number, the Guess a Number
+scripts were used as a baseline for Pelmanism. The get_by_urlsafe()
+function in the utils.py file remains unchanged.
+
+Below are some sources that I found helpful while working on the API.
+
+Udacity forum mentor 'swooding' helped me figure out an intermittent error
+I was encountering (occasionally GAE would not be able to retrieve the
+Guess1 entities). The solution was to give each Guess1 model a parent
+(game.key) and retrieve the models from the Datastore with ancestor queries.
+See https://discussions.udacity.com/t/intermittent-attributeerror-google-
+app-engine/198590.
+
+A post by Udacity forum mentor 'abhishek_ghosh' helped me figure out a
+querying problem I was having with the get_user_games endpoint; see
+https://discussions.udacity.com/t/join-like-queries/180753.
+
+Udacity student 'matthew_240343' gave me some hints on how to complete
+the get_user_rankings endpoint in a forum question he asked; see
+https://discussions.udacity.com/t/get-user-rankings-method-not-
+working/172489/3.
+
+SO user Peteris Caune helped me learn how to take a random object from
+a list in Python (used in the deck_creation() function in the game_logic.py 
+file); see http://stackoverflow.com/questions/18265935/python-create-list-
+with-numbers-between-2-values.
+
+An SO post helped me create the deck_check list (used in the guess_error()
+function in the game_logic.py file); see: http://stackoverflow.com/questions/
+18265935/python-create-list-with-numbers-between-2-values.
+
+A SO discussion helped me figure out how to display chosen cards; see http://stackoverflow.com/questions/2582138/finding-and-replacing-elements
+-in-a-list-python.
 
 
 ## License
