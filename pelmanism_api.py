@@ -430,28 +430,3 @@ class PelmanismApi(remote.Service):
 
 # Start the API server
 api = endpoints.api_server([PelmanismApi])
-
-
-# SOURCES
-
-# Pelmanism is based off of a game API (called 'Guess a Number') developed
-# by Udacity on Google App Engine. While this project is both different
-# from and more complicated than Guess a Number, the Guess a Number
-# scripts were used as a baseline for Pelmanism. The get_by_urlsafe()
-# function in the utils.py file remains unchanged.
-
-# Forum mentor swooding helped me figure out an intermittent error I was
-# encountering (occasionally GAE would not be able to retrieve the Guess1
-# entities). The solution was to give each Guess1 model a parent (game.key)
-# and retrieve the models from the Datastore with ancestor queries. See
-# https://discussions.udacity.com/t/intermittent-attributeerror-google-
-# app-engine/198590
-
-# A post by forum mentor abhishek_ghosh helped me figure out a querying
-# problem I was having with the get user games endpoint; see https://
-# discussions.udacity.com/t/join-like-queries/180753
-
-# Udacity student matthew_240343 gave me some hints on how to complete
-# the get_user_rankings endpoint in a forum question he asked; see
-# https://discussions.udacity.com/t/get-user-rankings-method-not-
-# working/172489/3
