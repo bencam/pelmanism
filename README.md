@@ -181,10 +181,9 @@ a list in Python (used in the deck_creation() function in the game_logic.py
 file); see [here](http://stackoverflow.com/questions/18265935/python-create-list-with-numbers-between-2-values).
 
 An SO post helped me create the deck_check list (used in the guess_error()
-function in the game_logic.py file); see [here])(http://stackoverflow.com/questions/18265935/python-create-list-with-numbers-between-2-values).
+function in the game_logic.py file); see [here](http://stackoverflow.com/questions/18265935/python-create-list-with-numbers-between-2-values).
 
-A SO discussion helped me figure out how to display chosen cards; see [here](http://stackoverflow.com/questions/2582138/finding-and-replacing-elements
--in-a-list-python).
+An SO discussion helped me figure out how to display chosen cards; see [here](http://stackoverflow.com/questions/2582138/finding-and-replacing-elements-in-a-list-python).
 
 
 ## License
