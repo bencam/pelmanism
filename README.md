@@ -156,32 +156,19 @@ By default, Pelmanism uses a deck of 20 cards, but this can be adjusted by alter
 
 ## Sources
 
-Pelmanism is based off of a game API (called 'Guess a Number') developed
-by Udacity on Google App Engine. While this project is both different
-from and more complicated than Guess a Number, the Guess a Number
-scripts were used as a baseline for Pelmanism. The get_by_urlsafe()
-function in the utils.py file remains unchanged.
+Pelmanism is based off of a game API (called 'Guess a Number') developed by Udacity on Google App Engine. While this project is both different from and more complicated than Guess a Number, the Guess a Number scripts were used as a baseline for Pelmanism. The get_by_urlsafe() function in the utils.py file remains unchanged.
 
 Below are some sources that I found helpful while working on the API.
 
-Udacity forum mentor 'swooding' helped me figure out an intermittent error
-I was encountering (occasionally GAE would not be able to retrieve the
-Guess1 entities). The solution was to give each Guess1 model a parent
-(game.key) and retrieve the models from the Datastore with ancestor queries.
-See [here](https://discussions.udacity.com/t/intermittent-attributeerror-google-app-engine/198590).
+Udacity forum mentor 'swooding' helped me figure out an intermittent error I was encountering (occasionally GAE would not be able to retrieve the Guess1 entities). The solution was to give each Guess1 model a parent (game.key) and retrieve the models from the Datastore with ancestor queries. See [here](https://discussions.udacity.com/t/intermittent-attributeerror-google-app-engine/198590).
 
-A post by Udacity forum mentor 'abhishek_ghosh' helped me figure out a
-querying problem I was having with the get_user_games endpoint; see [here](https://discussions.udacity.com/t/join-like-queries/180753).
+A post by Udacity forum mentor 'abhishek_ghosh' helped me figure out a querying problem I was having with the get_user_games endpoint; see [here](https://discussions.udacity.com/t/join-like-queries/180753).
 
-Udacity student 'matthew_240343' gave me some hints on how to complete
-the get_user_rankings endpoint in a forum question he asked; see [here](https://discussions.udacity.com/t/get-user-rankings-method-not-working/172489/3).
+Udacity student 'matthew_240343' gave me some hints on how to complete the get_user_rankings endpoint in a forum question he asked; see [here](https://discussions.udacity.com/t/get-user-rankings-method-not-working/172489/3).
 
-SO user Peteris Caune helped me learn how to take a random object from
-a list in Python (used in the deck_creation() function in the game_logic.py 
-file); see [here](http://stackoverflow.com/questions/18265935/python-create-list-with-numbers-between-2-values).
+SO user Peteris Caune helped me learn how to take a random object from a list in Python (used in the deck_creation() function in the game_logic.py file); see [here](http://stackoverflow.com/questions/306400/how-do-i-randomly-select-an-item-from-a-list-using-python).
 
-An SO post helped me create the deck_check list (used in the guess_error()
-function in the game_logic.py file); see [here](http://stackoverflow.com/questions/18265935/python-create-list-with-numbers-between-2-values).
+An SO post helped me create the deck_check list (used in the guess_error() function in the game_logic.py file); see [here](http://stackoverflow.com/questions/18265935/python-create-list-with-numbers-between-2-values).
 
 An SO discussion helped me figure out how to display chosen cards; see [here](http://stackoverflow.com/questions/2582138/finding-and-replacing-elements-in-a-list-python).
 
