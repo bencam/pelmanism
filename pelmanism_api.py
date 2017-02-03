@@ -25,18 +25,32 @@ from protorpc import remote, messages
 from google.appengine.api import memcache, taskqueue
 from google.appengine.ext import ndb
 
-from models import (User,
-                    Game,
-                    Guess1,
-                    Score,
-                    StringMessage,
-                    NewGameForm,
-                    GameForm,
-                    MakeMoveForm,
-                    ScoreForms,
-                    GameForms,
-                    UserRankings,
-                    GameHistory)
+from models.user import User, UserRankings, StringMessage
+from models.game import (Game,
+                        GameForm,
+                        GameForms,
+                        NewGameForm,
+                        MakeMoveForm,
+                        ScoreForms,
+                        GameHistory,
+                        StringMessage)
+from models.guess1 import Guess1
+from models.score import Score, ScoreForms
+
+# from models import user, game, guess1, score
+
+# from models import (User,
+#                     Game,
+#                     Guess1,
+#                     Score,
+#                     StringMessage,
+#                     NewGameForm,
+#                     GameForm,
+#                     MakeMoveForm,
+#                     ScoreForms,
+#                     GameForms,
+#                     UserRankings,
+#                     GameHistory)
 
 import game_logic
 
