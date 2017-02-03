@@ -37,21 +37,6 @@ from models.game import (Game,
 from models.guess1 import Guess1
 from models.score import Score, ScoreForms
 
-# from models import user, game, guess1, score
-
-# from models import (User,
-#                     Game,
-#                     Guess1,
-#                     Score,
-#                     StringMessage,
-#                     NewGameForm,
-#                     GameForm,
-#                     MakeMoveForm,
-#                     ScoreForms,
-#                     GameForms,
-#                     UserRankings,
-#                     GameHistory)
-
 import game_logic
 
 from utils import get_by_urlsafe
