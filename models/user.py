@@ -7,7 +7,6 @@ Add docstring
 """
 
 
-from datetime import datetime
 from protorpc import messages
 from google.appengine.ext import ndb
 
