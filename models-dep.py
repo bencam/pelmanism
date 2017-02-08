@@ -2,6 +2,10 @@
 
 
 """
+NOTE: The models.py file has been deprecated and is therefore now called
+models-dep.py. The file was refactored into a Python package called models.
+The package includes four modules: user.py, game.py, guess1.py, and score.py.
+
 The class definitions for the Google Datastore entities used by
 Pelmanism are defined in models.py. Helper methods are also included.
 
