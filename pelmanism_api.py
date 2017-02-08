@@ -27,13 +27,13 @@ from google.appengine.ext import ndb
 
 from models.user import User, UserRankings, StringMessage
 from models.game import (Game,
-                        GameForm,
-                        GameForms,
-                        NewGameForm,
-                        MakeMoveForm,
-                        ScoreForms,
-                        GameHistory,
-                        StringMessage)
+                         GameForm,
+                         GameForms,
+                         NewGameForm,
+                         MakeMoveForm,
+                         ScoreForms,
+                         GameHistory,
+                         StringMessage)
 from models.guess1 import Guess1
 from models.score import Score, ScoreForms
 
