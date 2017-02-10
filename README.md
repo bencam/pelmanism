@@ -58,7 +58,11 @@ By default, Pelmanism uses a deck of 20 cards, but this can be adjusted by alter
 ## Files included
 
  - pelmanism_api.py: contains endpoints and part of the game-playing logic
- - models.py: defines entities and messages; contains helper methods
+ - models package: four files defining entities and messages; contains helper methods
+      - user.py
+      - game.py
+      - guess1.py
+      - score.py
  - game_logic.py: contains five functions needed for the game play
  - main.py: contains handlers for the taskqueue and cronjob
  - utils.py: contains a helper function for retrieving game information
