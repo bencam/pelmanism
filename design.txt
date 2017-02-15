@@ -57,6 +57,8 @@ A single integer, the points property is used to give a score to each completed 
 
 I also added a new model: Guess1. I added this as a way of comparing the first and second guesses of each attempt. Each Guess1 model is given a parent (game.key) in pelmansim_api.py. I wanted the Guess1 models to have a parent in order to link each Guess1 model to a particular game (meaning each game has its own Guess1 model, which makes it possible for more than one person to play the game at the same time) and to avoid any latency problems when trying to retrieve a Guess1 model (see below for more on this).
 
+I put all four models in a separate file and put these in a Python package called models.
+
 
 
 QUESTION 2: What were some of the trade-offs or struggles you faced when implementing the new game logic?
