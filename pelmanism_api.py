@@ -11,8 +11,8 @@ get_user_games, cancel_game, get_high_scores, get_user_rankings,
 get_game_history.
 
 The class definitions for the Google Datastore entities used by
-Pelmanism are defined in models.py, and the game_logic.py file contains
-several functions used in the make_move endpoint.
+Pelmanism are defined in the models package, and the game_logic.py
+file contains several functions used in the make_move endpoint.
 
 """
 
