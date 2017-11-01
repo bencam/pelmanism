@@ -1,0 +1,69 @@
+# Reflect on Your Design
+A brief document outlining design decisions made while creating Pelmanism
+
+
+## QUESTION 1: What additional properties did you add to your models and why?
+
+For the User model, I added four properties:
+
+ - games_played
+ - total_attempts
+ - total_points
+ - points_per_attempt
+
+All four are non-repeating integer properties. I added games_played so that a user could view the number of games they have played through the get_user_rankings endpoint. I added total_attempts, total_points, and points_per_attempt in order to rank each user. (Users are ranked by points_per_attempt which is derived by dividing total_points by total_attempts.)
+
+In the Game model I added 10 properties:
+
+ - deck
+ - disp_deck
+ - attempts_made
+ - match_list
+ - matches_found
+ - match_list_int
+ - guess1_or_guess2
+ - cancelled
+ - guess_history
+ - time_created
+
+The deck property is the backbone of the game and essentially replaces the target property in the Guess a Number API. It is a list of strings showing where each card is located in the deck (i.e. the cards are all 'faceup').
+
+The disp_deck property is a list like the deck property; however, instead of showing the value of each card, it displays the cards 'facedown' (unless one is 'flipped over'). The disp_deck is essential to the game as it allows each user to see--as they make guesses--where in the deck the cards are located.
+
+I added the attempts_made (a single integer), match_list (a list of strings representing card values), and matches_found (a single integer) to give users a sense of how they are doing as the game progresses.
+
+The match_list_int property is a list of integers. Each card has an integer associated with it, and each time a match is found, the integer values of each card in the match is added to match_list_int. The property is never displayed in any endpoint; however, I added it as a way to make sure that a user does not pick the same card twice or pick a card that is already part of a match.
+
+The guess1_or_guess2 property is a single integer which indicates if the user is on their first or second guess of a given move. I added this so that the first and second guesses could be part of the same endpoint. (See the below section for more on this.)
+
+The cancelled property simply lets the user know if a game has been cancelled. I created the guess_history property (a list of each guess made) in order to allow users to see each move of a completed game.
+
+I added the time_created property because I thought it would be a helpful piece of information for a user who is looking through their active games.
+
+In the Score model I added five properties:
+
+ - time_completed
+ - attempts_made
+ - game_deck
+ - matches_found
+ - points
+
+The time_completed property replaces the date property in the Guess a Number API; it just gives the date as well as the time that a game is concluded. The attempts_made property (a single integer) replaces the guesses property in the Guess a Number API. I added this because an attempt or move in Pelmanism is composed of two guesses, rather than one.
+
+The game_deck and matches_found properties both come from the Game model; I added them to provide users with details of each completed game.
+
+A single integer, the points property is used to give a score to each completed game. Points are essential for ranking players and games and are derived with the following formula: points = (500 - ((attempts_made - matches_found) * 10)).
+
+I also added a new model: Guess1. I added this as a way of comparing the first and second guesses of each attempt. Each Guess1 model is given a parent (game.key) in pelmansim_api.py. I wanted the Guess1 models to have a parent in order to link each Guess1 model to a particular game (meaning each game has its own Guess1 model, which makes it possible for more than one person to play the game at the same time) and to avoid any latency problems when trying to retrieve a Guess1 model (see below for more on this).
+
+I put all four models in a separate file and put these in a Python package called models.
+
+
+
+## QUESTION 2: What were some of the trade-offs or struggles you faced when implementing the new game logic?
+
+The make_move endpoint proved the most difficult for me. I was not sure how to create one endpoint for essentially doing two different but similar tasks (guess1 and guess2). I originally created two endpoints, but while this worked, it was cumbersome to test, and it seemed like a poor design. I eventually realized, however, that I could combine guess1 and guess2 into the same endpoint by creating a new property in the Game model called guess1_or_guess2 (a single integer). Each time a user makes a guess, the guess1_or_guess2 property is increased by one, and a simple if/else statement determines if the user is making the first or second guess of the move.
+
+I also struggled with figuring out how to compare guess1 with guess2. For example, if the guess1_or_guess2 property indicated that the guess2 part of the function should execute, how would the the script be able to compare guess2 with guess1 (since the guess1 part of the function would have been skipped). While there are probably many ways around this problem, I chose to solve it by creating a new model called Guess1. I also chose to delete the contents of the model before adding new entities into it, meaning that there are never more than two entities--one for each property--in the model at a time. I did this to streamline the retrieval process (i.e. the only two entities in the model are always the entities I want to access).
+
+Probably the biggest challenge, however, was solving an intermittent error that would occur when calling the make_move endpoint for the second guess; occasionally GAE would not be able to retrieve the Guess1 entities. It appeared the error was a latency problem; i.e. I was trying to access the new Guess1 entities before they had been fully written into the Datastore. I solved this--thanks to a suggestion by a forum mentor (Steve or 'swooding')--by giving each Guess1 model a parent (game.key) and retrieving the models from the Datastore with ancestor queries. Not only did this solve the lag time issue, it also solved another problem I had not really thought about. I had set up the Guess1 model so that there was only one model at a time (meaning that two people could not play games on the API at the same time). By adding a parent to each Guess1 model, the API now builds a Guess1 model for each game, allowing multiple users to play games simultaneously. (For more information on this and the latency problem, see this discussion post in the forums: https://discussions.udacity.com/t/intermittent-attributeerror-google-app-engine/198590.)
