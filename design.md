@@ -52,7 +52,9 @@ The time_completed property replaces the date property in the Guess a Number API
 
 The game_deck and matches_found properties both come from the Game model; I added them to provide users with details of each completed game.
 
-A single integer, the points property is used to give a score to each completed game. Points are essential for ranking players and games and are derived with the following formula: points = (500 - ((attempts_made - matches_found) * 10)).
+A single integer, the points property is used to give a score to each completed game. Points are essential for ranking players and games and are derived with the following formula:
+
+`points = (500 - ((attempts_made - matches_found) * 10))`
 
 I also added a new model: Guess1. I added this as a way of comparing the first and second guesses of each attempt. Each Guess1 model is given a parent (game.key) in pelmansim_api.py. I wanted the Guess1 models to have a parent in order to link each Guess1 model to a particular game (meaning each game has its own Guess1 model, which makes it possible for more than one person to play the game at the same time) and to avoid any latency problems when trying to retrieve a Guess1 model (see below for more on this).
 
